@@ -2,16 +2,11 @@ name: Build and Release
 
 on:
   push:
-    tags:
-      - 'v*' # Triggers only when you push a tag like v1.0.1
-    branches:
-      - "main" # Also triggers on main for testing
+    branches: [ "main" ] # Runs every time you commit to the main branch
 
 jobs:
   build-windows:
     runs-on: windows-latest
-    outputs:
-      exe_path: dist/Server Monitor.exe
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -84,8 +79,6 @@ jobs:
     permissions: write-all
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
-    # Only run this if we push a tag or manually want a release
-    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Download Windows Build
         uses: actions/download-artifact@v4
@@ -103,7 +96,9 @@ jobs:
           files: |
             Server-Monitor.exe
             server-monitor.deb
-          name: Release ${{ github.ref_name }}
+          tag_name: latest
+          name: Latest Continuous Build
+          body: "This release contains the latest build of the Server Monitor."
           draft: false
           prerelease: false
         env:
