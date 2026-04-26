@@ -1,30 +1,32 @@
-name: Build Server Monitor
+name: Build and Release
 
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - 'v*' # Triggers only when you push a tag like v1.0.1
+    branches:
+      - "main" # Also triggers on main for testing
 
 jobs:
   build-windows:
     runs-on: windows-latest
+    outputs:
+      exe_path: dist/Server Monitor.exe
     steps:
     - uses: actions/checkout@v4
-    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller gevent-websocket
-
     - name: Build EXE
       run: |
         python -m PyInstaller --noconfirm --onefile --noconsole `
-          --name="Server Monitor" `
+          --name="Server-Monitor" `
           --icon="favicon-64x64.ico" `
           --add-data "favicon.ico;." `
           --add-data "static;static" `
@@ -32,37 +34,27 @@ jobs:
           --hidden-import=gevent `
           --hidden-import=engineio.async_drivers.gevent `
           --hidden-import=geventwebsocket.gws `
-          --exclude-module=tkinter `
-          --exclude-module=tcl `
-          --exclude-module=tk `
-          --exclude-module=idlelib `
-          --exclude-module=unittest `
           "server_monitor.py"
-
-    - name: Upload EXE
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Windows-Server-Monitor
-        path: dist/Server Monitor.exe
+        name: Windows-Build
+        path: dist/Server-Monitor.exe
 
   build-linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.10'
-
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller gevent-websocket
-
     - name: Build Linux Binary
-      # Linux uses : instead of ; for --add-data
       run: |
         pyinstaller --noconfirm --onefile --name="server-monitor" \
           --add-data "favicon.ico:." \
@@ -71,7 +63,6 @@ jobs:
           --hidden-import=engineio.async_drivers.gevent \
           --hidden-import=geventwebsocket.gws \
           "server_monitor.py"
-
     - name: Create .deb Package
       run: |
         mkdir -p package/usr/local/bin
@@ -83,9 +74,37 @@ jobs:
         Maintainer: github-actions
         Description: Server Monitor Website" > package/DEBIAN/control
         dpkg-deb --build package server-monitor.deb
-
-    - name: Upload DEB
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Linux-Debian-Package
+        name: Linux-Build
         path: server-monitor.deb
+
+  publish-release:
+    permissions: write-all
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+    # Only run this if we push a tag or manually want a release
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Download Windows Build
+        uses: actions/download-artifact@v4
+        with:
+          name: Windows-Build
+
+      - name: Download Linux Build
+        uses: actions/download-artifact@v4
+        with:
+          name: Linux-Build
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            Server-Monitor.exe
+            server-monitor.deb
+          name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
