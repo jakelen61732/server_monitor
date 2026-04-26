@@ -1,0 +1,10 @@
+flask
+click
+waitress
+psutil
+flask-socketio
+gevent
+gevent-websocket
+gputil
+pyinstaller
+pywebview
