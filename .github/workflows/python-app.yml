@@ -22,22 +22,21 @@ jobs:
         pip install pyinstaller gevent-websocket
 
     - name: Build EXE
-      # This uses your exact command. Note: GitHub runners have UPX pre-installed in the path.
       run: |
-        python -m PyInstaller --noconfirm --onefile --noconsole ^
-          --name="Server Monitor" ^
-          --icon="favicon-64x64.ico" ^
-          --add-data "favicon.ico;." ^
-          --add-data "static;static" ^
-          --version-file="file_version_info.txt" ^
-          --hidden-import=gevent ^
-          --hidden-import=engineio.async_drivers.gevent ^
-          --hidden-import=geventwebsocket.gws ^
-          --exclude-module=tkinter ^
-          --exclude-module=tcl ^
-          --exclude-module=tk ^
-          --exclude-module=idlelib ^
-          --exclude-module=unittest ^
+        python -m PyInstaller --noconfirm --onefile --noconsole `
+          --name="Server Monitor" `
+          --icon="favicon-64x64.ico" `
+          --add-data "favicon.ico;." `
+          --add-data "static;static" `
+          --version-file="file_version_info.txt" `
+          --hidden-import=gevent `
+          --hidden-import=engineio.async_drivers.gevent `
+          --hidden-import=geventwebsocket.gws `
+          --exclude-module=tkinter `
+          --exclude-module=tcl `
+          --exclude-module=tk `
+          --exclude-module=idlelib `
+          --exclude-module=unittest `
           "server_monitor.py"
 
     - name: Upload EXE
