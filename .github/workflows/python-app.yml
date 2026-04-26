@@ -1,0 +1,92 @@
+name: Build Server Monitor
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller gevent-websocket
+
+    - name: Build EXE
+      # This uses your exact command. Note: GitHub runners have UPX pre-installed in the path.
+      run: |
+        python -m PyInstaller --noconfirm --onefile --noconsole ^
+          --name="Server Monitor" ^
+          --icon="favicon-64x64.ico" ^
+          --add-data "favicon.ico;." ^
+          --add-data "static;static" ^
+          --version-file="file_version_info.txt" ^
+          --hidden-import=gevent ^
+          --hidden-import=engineio.async_drivers.gevent ^
+          --hidden-import=geventwebsocket.gws ^
+          --exclude-module=tkinter ^
+          --exclude-module=tcl ^
+          --exclude-module=tk ^
+          --exclude-module=idlelib ^
+          --exclude-module=unittest ^
+          "server_monitor.py"
+
+    - name: Upload EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: Windows-Server-Monitor
+        path: dist/Server Monitor.exe
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pyinstaller gevent-websocket
+
+    - name: Build Linux Binary
+      # Linux uses : instead of ; for --add-data
+      run: |
+        pyinstaller --noconfirm --onefile --name="server-monitor" \
+          --add-data "favicon.ico:." \
+          --add-data "static:static" \
+          --hidden-import=gevent \
+          --hidden-import=engineio.async_drivers.gevent \
+          --hidden-import=geventwebsocket.gws \
+          "server_monitor.py"
+
+    - name: Create .deb Package
+      run: |
+        mkdir -p package/usr/local/bin
+        cp dist/server-monitor package/usr/local/bin/
+        mkdir -p package/DEBIAN
+        echo "Package: server-monitor
+        Version: 1.0.0
+        Architecture: amd64
+        Maintainer: github-actions
+        Description: Server Monitor Website" > package/DEBIAN/control
+        dpkg-deb --build package server-monitor.deb
+
+    - name: Upload DEB
+      uses: actions/upload-artifact@v4
+      with:
+        name: Linux-Debian-Package
+        path: server-monitor.deb
