@@ -1,5 +1,9 @@
 name: Build and Release
 
+on:
+  push:
+    branches: [ "main" ]
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -78,25 +82,6 @@ jobs:
         name: Linux-Build
         path: Server-Monitor.deb
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - name: Build APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1.2.0
-        env:
-          USER: root
-          PIP_BREAK_SYSTEM_PACKAGES: 1
-        with:
-          workdir: .
-          command: yes | buildozer android debug
-          buildozer_version: master
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: Android-Build
-          # Buildozer typically outputs to the bin/ folder
-          path: bin/*.apk
 
   publish-release:
     permissions: write-all
@@ -111,7 +96,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb,./artifacts/Android-Build/*.apk"
+          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb"
           tag: "latest"
           name: "Latest Continuous Build"
           body: "This release contains the latest build of the Server Monitor."
