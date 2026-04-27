@@ -2,6 +2,15 @@
 
 warn_on_root = 0
 
+# (str) Icon of the application
+icon.filename = %(source.dir)s/icon_512.png
+
+# (str) Icon of the application (adaptive foreground)
+# icon.adaptive_foreground.filename = %(source.dir)s/icon_foreground.png
+
+# (str) Icon of the application (adaptive background)
+# icon.adaptive_background.filename = %(source.dir)s/icon_background.png
+
 # (str) Title of your application
 title = Server Monitor
 
