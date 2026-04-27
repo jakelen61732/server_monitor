@@ -70,12 +70,12 @@ jobs:
         Architecture: amd64
         Maintainer: github-actions
         Description: Server Monitor Website" > package/DEBIAN/control
-        dpkg-deb --build package server-monitor.deb
+        dpkg-deb --build package server-Monitor.deb
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: Linux-Build
-        path: server-monitor.deb
+        path: Server-Monitor.deb
 
   publish-release:
     permissions: write-all
