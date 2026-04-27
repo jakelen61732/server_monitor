@@ -53,9 +53,11 @@ jobs:
         pip install pyinstaller gevent-websocket
     - name: Build Linux Binary
       run: |
-        pyinstaller --noconfirm --onefile --name="server-monitor" \
+        pyinstaller --noconfirm --onefile --name="Server-Monitor" \
           --add-data "favicon.ico:." \
           --add-data "static:static" \
+          --add-data "templates:templates" \
+          --add-data "monitor_core:monitor_core" \
           --hidden-import=gevent \
           --hidden-import=engineio.async_drivers.gevent \
           --hidden-import=geventwebsocket.gws \
