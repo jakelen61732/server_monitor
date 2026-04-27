@@ -87,13 +87,10 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Build APK with Buildozer
-        uses: ArtemSBulgakov/buildozer-action@v1
-        env:
-          USER: root
-          PIP_BREAK_SYSTEM_PACKAGES: 1
+        uses: kivy/buildozer-action@v1
         with:
           workdir: .
-          buildozer_version: stable
+          buildozer_version: master
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
