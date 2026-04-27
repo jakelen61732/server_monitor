@@ -44,6 +44,9 @@ fullscreen = 0
 # (list) Permissions (Internet is required for the Flask server and local loopback)
 android.permissions = INTERNET, READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE
 
+# This allows the WebView to talk to your local Flask server over HTTP
+android.manifest.usesCleartextTraffic = True
+
 # (int) Target Android API
 android.api = 33
 

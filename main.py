@@ -4,7 +4,10 @@ import os
 try:
     from gevent import monkey
     # gevent monkey patching must happen before importing Flask/SocketIO
-    monkey.patch_all(thread=False)
+    if platform == 'android':
+        monkey.patch_all(thread=False)
+    else:
+        monkey.patch_all()
 except ImportError:
     pass
 
@@ -32,6 +35,8 @@ class ServerMonitorApp(App):
                 socketio.run(
                     app, host="127.0.0.1", port=self.active_port, debug=False, use_reloader=False
                 )
+            except ImportError as e:
+                Logger.error(f"Flask: Missing dependency: {str(e)}")
             except Exception as e:
                 Logger.error(f"Flask: Server crashed: {str(e)}")
 
@@ -54,28 +59,34 @@ class ServerMonitorApp(App):
 
     def create_android_webview(self, *args):
         """Uses PyJnius to create a native Android WebView as the app content."""
+        Logger.info("WebView: Initializing native Android components")
         try:
             from jnius import autoclass
             from android.runnable import run_on_ui_thread
 
             # Access native Android Java classes
-            WebView = autoclass('android.webkit.WebView')
-            WebViewClient = autoclass('android.webkit.WebViewClient')
-            PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            activity = PythonActivity.mActivity
+            try:
+                WebView = autoclass('android.webkit.WebView')
+                WebViewClient = autoclass('android.webkit.WebViewClient')
+                WebSettings = autoclass('android.webkit.WebSettings')
+                PythonActivity = autoclass('org.kivy.android.PythonActivity')
+                activity = PythonActivity.mActivity
+            except Exception as jni_e:
+                Logger.error(f"WebView: JNI class lookup failed: {str(jni_e)}")
+                return
 
             @run_on_ui_thread
             def set_webview_as_content():
-                webview = WebView(activity)
-                settings = webview.getSettings()
-                settings.setJavaScriptEnabled(True)
-                settings.setDomStorageEnabled(True) # Required for some JS charts
-                settings.setAllowFileAccess(True)
-                
-                webview.setWebViewClient(WebViewClient())
-                activity.setContentView(webview)
-                webview.loadUrl(f"http://127.0.0.1:{self.active_port}")
                 try:
+                    webview = WebView(activity)
+                    settings = webview.getSettings()
+                    settings.setJavaScriptEnabled(True)
+                    settings.setDomStorageEnabled(True) 
+                    settings.setAllowFileAccess(True)
+                    
+                    webview.setWebViewClient(WebViewClient())
+                    activity.setContentView(webview)
+                    webview.loadUrl(f"http://127.0.0.1:{self.active_port}")
                     Logger.info("WebView: Successfully initialized and loaded URL")
                 except Exception as e:
                     Logger.error(f"WebView: JNI error in UI thread: {str(e)}")
