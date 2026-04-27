@@ -88,6 +88,8 @@ jobs:
       - uses: actions/checkout@v6
       - name: Build APK with Buildozer
         uses: ArtemSBulgakov/buildozer-action@v1.2.0
+        env:
+          USER: root
         with:
           workdir: .
           buildozer_version: master
