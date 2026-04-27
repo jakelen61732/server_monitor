@@ -87,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Build APK with Buildozer
-        uses: kivy/buildozer@v1
+        uses: ArtemSBulgakov/buildozer-action@v1.2.0
         with:
           workdir: .
           buildozer_version: master
