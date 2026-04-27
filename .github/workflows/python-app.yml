@@ -37,7 +37,6 @@ jobs:
           "server_monitor.py"
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
-      with:
         name: Windows-Build
         path: dist/Server-Monitor.exe
 
@@ -78,7 +77,6 @@ jobs:
         dpkg-deb --build package Server-Monitor.deb
     - name: Upload Artifact
       uses: actions/upload-artifact@v7
-      with:
         name: Linux-Build
         path: Server-Monitor.deb
 
