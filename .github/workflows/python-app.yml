@@ -2,7 +2,7 @@ name: Build and Release
 
 on:
   push:
-    branches: [ "main" ] # Runs every time you commit to the main branch
+    branches: [ "main" ]
 
 jobs:
   build-windows:
@@ -65,7 +65,7 @@ jobs:
     - name: Create .deb Package
       run: |
         mkdir -p package/usr/local/bin
-        cp dist/server-monitor package/usr/local/bin/
+        cp dist/Server-Monitor package/usr/local/bin/ 
         mkdir -p package/DEBIAN
         echo "Package: server-monitor
         Version: 1.0.0
@@ -84,26 +84,19 @@ jobs:
     needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
-      - name: Download Windows Build
+      - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: Windows-Build
-
-      - name: Download Linux Build
-        uses: actions/download-artifact@v4
-        with:
-          name: Linux-Build
+          path: ./artifacts
 
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: ncipollo/release-action@v1
         with:
-          files: |
-            Server-Monitor.exe
-            Server-Monitor.deb
-          tag_name: latest
-          name: Latest Continuous Build
+          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb"
+          tag: "latest"
+          name: "Latest Continuous Build"
           body: "This release contains the latest build of the Server Monitor."
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          allowUpdates: true
+          removeArtifacts: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
