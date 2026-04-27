@@ -25,6 +25,8 @@ jobs:
           --icon="favicon-64x64.ico" `
           --add-data "favicon.ico;." `
           --add-data "static;static" `
+          --add-data "templates;templates" `
+          --add-data "monitor_core;monitor_core" `
           --version-file="file_version_info.txt" `
           --hidden-import=gevent `
           --hidden-import=engineio.async_drivers.gevent `
@@ -95,7 +97,7 @@ jobs:
         with:
           files: |
             Server-Monitor.exe
-            server-monitor.deb
+            Server-Monitor.deb
           tag_name: latest
           name: Latest Continuous Build
           body: "This release contains the latest build of the Server Monitor."
