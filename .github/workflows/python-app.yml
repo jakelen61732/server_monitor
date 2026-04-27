@@ -87,14 +87,15 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Build APK with Buildozer
-        uses: kivy/buildozer-action@v1
+        uses: ArtemSBulgakov/buildozer-action@v1
         with:
           workdir: .
-          buildozer_version: master
+          buildozer_version: stable
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
           name: Android-Build
+          # Buildozer typically outputs to the bin/ folder
           path: bin/*.apk
 
   publish-release:
