@@ -1,5 +1,7 @@
 [app]
 
+warn_on_root = 0
+
 # (str) Title of your application
 title = Server Monitor
 
@@ -22,8 +24,7 @@ version = 1.0.0
 # (list) Application requirements
 # Packages like gevent and psutil contain C extensions. 
 # Buildozer uses 'recipes' to compile these for Android.
-# requirements = python3,kivy,flask,flask-socketio,gevent,gevent-websocket,psutil,pyjnius,jinja2,werkzeug,itsdangerous,click,markupsafe
-requirements = python3,kivy,flask,flask-socketio,psutil,pyjnius,jinja2,werkzeug,itsdangerous,click,markupsafe
+requirements = python3, kivy, flask, flask-socketio, gevent, gevent-websocket, psutil, pyjnius, android
 
 # (str) Supported orientations
 orientation = portrait

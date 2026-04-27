@@ -14,6 +14,7 @@ from kivy.app import App
 from kivy.uix.label import Label
 from kivy.utils import platform
 from kivy.clock import Clock
+from kivy.logger import Logger
 
 class ServerMonitorApp(App):
     def __init__(self, **kwargs):
@@ -25,12 +26,19 @@ class ServerMonitorApp(App):
         # Ensure the port is available on the device
         self.active_port = ensure_port_available("127.0.0.1", SERVER_PORT)
         
+        def run_flask():
+            try:
+                Logger.info(f"Flask: Starting server on 127.0.0.1:{self.active_port}")
+                socketio.run(
+                    app, host="127.0.0.1", port=self.active_port, debug=False, use_reloader=False
+                )
+            except Exception as e:
+                Logger.error(f"Flask: Server crashed: {str(e)}")
+
         # 1. Start the Flask-SocketIO server in a background daemon thread
         # For APK usage, we default to 127.0.0.1 for security within the sandbox
         flask_thread = threading.Thread(
-            target=lambda: socketio.run(
-                app, host="127.0.0.1", port=self.active_port, debug=False, use_reloader=False
-            ),
+            target=run_flask,
             daemon=True
         )
         flask_thread.start()
@@ -67,10 +75,15 @@ class ServerMonitorApp(App):
                 webview.setWebViewClient(WebViewClient())
                 activity.setContentView(webview)
                 webview.loadUrl(f"http://127.0.0.1:{self.active_port}")
+                try:
+                    Logger.info("WebView: Successfully initialized and loaded URL")
+                except Exception as e:
+                    Logger.error(f"WebView: JNI error in UI thread: {str(e)}")
 
             set_webview_as_content()
         except Exception as e:
             print(f"Native WebView error: {e}")
+            Logger.error(f"WebView: Failed to setup Jnius classes: {str(e)}")
 
 if __name__ == '__main__':
     ServerMonitorApp().run()
