@@ -93,7 +93,7 @@ jobs:
           PIP_BREAK_SYSTEM_PACKAGES: 1
         with:
           workdir: .
-          command: buildozer android debug
+          command: yes | buildozer android debug
           buildozer_version: master
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
