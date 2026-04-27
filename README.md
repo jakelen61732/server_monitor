@@ -1,2 +1,85 @@
-# server_monitor
-Server Monitor Dashboard
+# Server Monitor Dashboard
+
+A professional, cross-platform server monitoring tool with a real-time web dashboard and a standalone desktop GUI. Built with Python, Flask-SocketIO, and Tailwind CSS.
+
+## 🚀 Features
+
+- **Real-Time Monitoring**: Live updates for CPU, RAM, Disk, and Network usage.
+- **Top Processes**: View the most memory-intensive processes currently running.
+- **Hardware Details**: Automated detection of CPU model, RAM speed, and GPU load.
+- **Interactive Desktop GUI**: Standalone frameless window support using `pywebview`.
+- **Terminal Configuration**: Built-in menu for easy Host and Port management.
+- **Cross-Platform**: Optimized for Windows, Linux, and Android (Termux).
+
+## 📸 Screenshots
+
+| Dashboard View | System Details |
+| :---: | :---: |
+| ![Dashboard](screenshots/dashboard.png) | ![System Details](screenshots/system_details.png) |
+
+*Note: Create a `screenshots/` folder in your project root and add your images there.*
+
+## �️ Tech Stack
+
+- **Backend**: Python, Flask, Gevent, SocketIO.
+- **Frontend**: Tailwind CSS, Chart.js, Socket.IO Client.
+- **Monitoring**: Psutil, GPUtil.
+- **GUI**: PyWebView.
+
+## 📦 Installation
+
+### Prerequisites
+- Python 3.7 or higher.
+- NVIDIA Drivers (optional, for GPU load monitoring).
+
+### Windows
+1. Run the setup script to create a virtual environment and install dependencies:
+   ```cmd
+   setup.bat
+   ```
+2. Activate the environment:
+   ```cmd
+   .venv\Scripts\activate
+   ```
+3. Run the application:
+   ```cmd
+   python server_monitor.py
+   ```
+
+### Linux (Debian/Ubuntu)
+1. Run the setup script (installs system dependencies for the GUI):
+   ```bash
+   chmod +x setup.sh
+   ./setup.sh
+   ```
+2. Activate the environment and run:
+   ```bash
+   source .venv/bin/activate
+   python3 server_monitor.py
+   ```
+
+## 🏗️ Building the Executable (Windows)
+
+To bundle the application into a single standalone `.exe` file with UPX compression:
+```cmd
+.\build_exe.bat
+```
+The output will be located in the `dist/` folder.
+
+## 📂 Project Structure
+
+```text
+server_monitor/
+├── monitor_core/       # Core hardware monitoring and utility logic
+├── static/             # Frontend assets (CSS, JS, Icons)
+├── templates/          # HTML templates (Jinja2)
+├── server_monitor.py   # Application entry point & server logic
+├── setup.py            # Package metadata
+├── requirements.txt    # Project dependencies
+├── build_exe.bat       # Windows build script
+└── setup.bat/sh        # Installation scripts
+```
+
+## 📝 License
+
+MIT License. Developed by KJAYDev.

@@ -1,0 +1,67 @@
+body {
+    background-color: #111827;
+    margin: 0;
+    font-family: sans-serif;
+    overflow: hidden;
+}
+
+#loading-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #111827;
+    transition: opacity 0.5s ease;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid #4ade80;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+html, body {
+    cursor: auto;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #4ade80;
+}
+
+.custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 transparent;
+}
+
+button, a, .cursor-pointer, [onclick] {
+    cursor: pointer !important;
+}
+
+.pywebview-drag-region {
+    cursor: move !important;
+}

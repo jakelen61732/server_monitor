@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server Monitor</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/tailwind.min.js"></script>
+</head>
+<body id="main-body" data-gpu-supported="{{ 'true' if gpu_load_supported else 'false' }}" class="bg-gray-900 text-white min-h-screen flex flex-col p-0 m-0 overflow-y-auto cursor-default">
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p class="text-gray-400 font-mono text-sm animate-pulse">Initializing Monitor...</p>
+    </div>
+
+    <div class="relative bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 py-1.5 select-none shrink-0 h-10">
+        <div class="pywebview-drag-region absolute top-[5px] inset-x-[5px] bottom-0 cursor-move z-0"></div>
+        <div class="flex items-center gap-2 pointer-events-none relative z-10">
+            <img src="/favicon.ico" class="w-4 h-4 opacity-80" alt="logo">
+            <span class="text-[11px] font-bold text-gray-500 tracking-wider uppercase">Server Monitor</span>
+        </div>
+        <div class="flex items-center gap-1 relative z-20">
+            <button onclick="window.pywebview.api.minimize()" title="Minimize" class="p-1.5 hover:bg-gray-700 rounded-md transition-colors group">
+                <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4"></path></svg>
+            </button>
+            <button id="maximize-btn" onclick="handleToggleMaximize()" title="Maximize" class="p-1.5 hover:bg-gray-700 rounded-md transition-colors group">
+                <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" stroke-width="2.5" stroke="currentColor" fill="none" /></svg>
+            </button>
+            <button onclick="window.pywebview.api.close()" title="Close" class="p-1.5 hover:bg-red-500/20 group rounded-md transition-colors">
+                <svg class="w-3.5 h-3.5 text-gray-500 group-hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="flex-1 flex items-start md:items-center justify-center p-4 transition-all duration-500">
+    <div class="bg-gray-800 shadow-xl rounded-2xl p-4 md:p-8 w-full max-w-5xl border border-gray-700 transition-all duration-500 ease-in-out transform-gpu will-change-transform">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-2xl font-bold text-green-400">Server Monitor</h1>
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-400 font-mono uppercase">Live</span>
+                <span class="flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="space-y-6">
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <div class="flex justify-between items-start">
+                            <p class="text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">CPU</p>
+                            <span class="text-[10px] font-mono text-orange-400" id="cpu-temp">--°C</span>
+                        </div>
+                        <p class="text-2xl md:text-3xl font-bold" id="cpu-usage">--%</p>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">RAM</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="ram-usage">--%</p>
+                    </div>
+                    <div class="bg-gray-700 p-4 rounded-lg">
+                        <p class="text-xs text-gray-400 font-semibold mb-1 uppercase tracking-wider">Disk</p>
+                        <p class="text-2xl md:text-3xl font-bold" id="disk-usage">--%</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-700 p-4 rounded-lg">
+                    <div class="flex justify-around text-center">
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Download</p>
+                            <p class="text-lg font-mono text-blue-400" id="net-down">--</p>
+                        </div>
+                        <div class="border-l border-gray-600"></div>
+                        <div>
+                            <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider">Upload</p>
+                            <p class="text-lg font-mono text-purple-400" id="net-up">--</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="h-48 lg:h-64">
+                    <canvas id="cpuChart"></canvas>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="relative flex border-b border-gray-700">
+                    <button onclick="switchTab('processes')" id="btn-processes" class="w-1/2 px-4 py-2 text-sm font-semibold text-green-400 transition-all">
+                        Top Processes
+                    </button>
+                    <button onclick="switchTab('system')" id="btn-system" class="w-1/2 px-4 py-2 text-sm font-semibold text-gray-400 hover:text-white transition-all">
+                        System Details
+                    </button>
+                    <div id="tab-indicator" class="absolute bottom-0 h-0.5 bg-green-400 transition-all duration-300 ease-in-out" style="width: 50%; left: 0;"></div>
+                </div>
+
+                <div class="overflow-hidden">
+                    <div id="tab-wrapper" class="flex w-[200%] transition-transform duration-300 ease-in-out">
+                        <div id="tab-processes" class="w-1/2 h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                            <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Top Processes (RAM)</h2>
+                            <div class="bg-gray-700/50 rounded-lg overflow-hidden">
+                                <table class="w-full text-xs text-left">
+                                    <thead>
+                                        <tr class="text-gray-500 border-b border-gray-600">
+                                            <th class="px-4 py-2 font-semibold">PID</th>
+                                            <th class="px-4 py-2 font-semibold">Process</th>
+                                            <th class="px-4 py-2 text-right font-semibold">Usage</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="process-table" class="font-mono"></tbody>
+                                </table>
+                            </div>
+
+                            <div class="space-y-3 text-sm border-t border-gray-700 pt-4 mt-6">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">RAM Allocation:</span>
+                                    <span class="font-mono" id="ram-details">-- GB / -- GB</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Internet Ping:</span>
+                                    <span class="font-mono" id="internet-ping">--ms</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">Browser Latency:</span>
+                                    <span class="font-mono text-green-400" id="latency">--ms</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">System Uptime:</span>
+                                    <span class="font-mono" id="system-uptime">--</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-400">App Uptime:</span>
+                                    <span class="font-mono text-green-400" id="app-uptime">--</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tab-system" class="w-1/2 h-[450px] overflow-y-auto pr-2 custom-scrollbar">
+                            <div class="space-y-4 pb-4">
+                                <div class="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Processor</p>
+                                    <p class="text-sm font-mono text-blue-300 leading-relaxed">{{ cpu_model }}</p>
+                                </div>
+                                <div class="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Storage Overview</p>
+                                    <p class="text-sm font-mono">Total Capacity: <span class="text-green-400">{{ total_disk }}</span></p>
+                                </div>
+                                <div class="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Graphics Unit</p>
+                                    <div class="text-sm font-mono space-y-1">
+                                        <p class="text-blue-300 leading-tight">{{ gpu_name }}</p>
+                                        {% if gpu_load_supported %}
+                                        <p>Usage: <span id="gpu-usage" class="text-green-400">--%</span></p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Memory Hardware</p>
+                                    <div class="text-sm font-mono space-y-1">
+                                        <p>Speed: <span class="text-blue-300">{{ ram_speed }}</span></p>
+                                        <p>Form Factor: <span class="text-blue-300">{{ ram_form }}</span></p>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-700/30 p-4 rounded-lg border border-gray-700/50">
+                                    <p class="text-[10px] text-gray-500 uppercase font-bold mb-1">Platform Details</p>
+                                    <div class="text-sm font-mono space-y-1">
+                                        <div class="flex justify-between"><span class="text-gray-400 text-xs uppercase">OS</span><span class="text-blue-300">{{ os_info }}</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400 text-xs uppercase">Arch</span><span>{{ architecture }}</span></div>
+                                        <div class="flex justify-between"><span class="text-gray-400 text-xs uppercase">Python</span><span>{{ python_version }}</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/chart.min.js"></script>
+    <script src="/static/socket.io.min.js"></script>
+    <script src="/static/dashboard.js"></script>
+</body>
+</html>
