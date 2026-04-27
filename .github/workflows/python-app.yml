@@ -90,8 +90,10 @@ jobs:
         uses: ArtemSBulgakov/buildozer-action@v1.2.0
         env:
           USER: root
+          PIP_BREAK_SYSTEM_PACKAGES: 1
         with:
           workdir: .
+          command: buildozer android debug
           buildozer_version: master
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
