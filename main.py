@@ -1,9 +1,12 @@
 import threading
 import os
-from gevent import monkey
 
-# gevent monkey patching must happen before importing Flask/SocketIO
-monkey.patch_all(thread=False)
+try:
+    from gevent import monkey
+    # gevent monkey patching must happen before importing Flask/SocketIO
+    monkey.patch_all(thread=False)
+except ImportError:
+    pass
 
 from server_monitor import app, socketio, SERVER_HOST, SERVER_PORT
 from monitor_core.utils import ensure_port_available

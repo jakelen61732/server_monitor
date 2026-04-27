@@ -39,7 +39,7 @@ app = Flask(__name__,
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*", 
-    async_mode='gevent',
+    async_mode=None, # Automatically selects 'gevent' if available, otherwise 'threading'
     ping_timeout=60, 
     ping_interval=25
 )
