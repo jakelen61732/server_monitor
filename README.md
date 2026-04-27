@@ -19,7 +19,7 @@ A professional, cross-platform server monitoring tool with a real-time web dashb
 
 *Note: Create a `screenshots/` folder in your project root and add your images there.*
 
-## �️ Tech Stack
+## 🛠️ Tech Stack
 
 - **Backend**: Python, Flask, Gevent, SocketIO.
 - **Frontend**: Tailwind CSS, Chart.js, Socket.IO Client.
@@ -57,6 +57,23 @@ A professional, cross-platform server monitoring tool with a real-time web dashb
    source .venv/bin/activate
    python3 server_monitor.py
    ```
+
+### Android (Termux)
+1. Install **Termux** (recommended via F-Droid).
+2. Update the environment and install Python along with build tools:
+   ```bash
+   pkg update && pkg upgrade
+   pkg install python clang make
+   ```
+3. Install the required Python packages:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Start the monitoring server:
+   ```bash
+   python server_monitor.py
+   ```
+   *Note: On Termux, the app will automatically fall back to browser mode. Use the Local IP provided in the terminal to access the dashboard from your mobile browser.*
 
 ## 🏗️ Building the Executable (Windows)
 
