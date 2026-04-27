@@ -9,6 +9,12 @@ import webbrowser
 
 CONFIG_FILE = "config.json"
 
+def get_config_path():
+    """Returns a writable path for the config file on all platforms."""
+    # ANDROID_PRIVATE_PATH is set by python-for-android
+    base_path = os.environ.get('ANDROID_PRIVATE_PATH', os.path.abspath("."))
+    return os.path.join(base_path, CONFIG_FILE)
+
 def get_resource_path(relative_path):
     """Get absolute path to resource, works for dev and for PyInstaller."""
     try:
@@ -19,9 +25,10 @@ def get_resource_path(relative_path):
 
 def load_config():
     """Loads host and port from config.json if it exists."""
-    if os.path.exists(CONFIG_FILE):
+    config_path = get_config_path()
+    if os.path.exists(config_path):
         try:
-            with open(CONFIG_FILE, 'r') as f:
+            with open(config_path, 'r') as f:
                 return json.load(f)
         except Exception:
             pass
@@ -29,8 +36,9 @@ def load_config():
 
 def save_config(host, port):
     """Saves the current host and port to config.json."""
+    config_path = get_config_path()
     try:
-        with open(CONFIG_FILE, 'w') as f:
+        with open(config_path, 'w') as f:
             json.dump({"host": host, "port": port}, f, indent=4)
     except Exception as e:
         print(f"[ERROR] Could not save config: {e}")
