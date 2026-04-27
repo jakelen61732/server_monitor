@@ -85,7 +85,7 @@ jobs:
 
   publish-release:
     permissions: write-all
-    needs: [build-windows, build-linux, build-android]
+    needs: [build-windows, build-linux]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
