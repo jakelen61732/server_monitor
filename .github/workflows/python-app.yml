@@ -82,9 +82,24 @@ jobs:
         name: Linux-Build
         path: Server-Monitor.deb
 
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Build APK with Buildozer
+        uses: kivy/buildozer-action@v1
+        with:
+          workdir: .
+          buildozer_version: master
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: Android-Build
+          path: bin/*.apk
+
   publish-release:
     permissions: write-all
-    needs: [build-windows, build-linux]
+    needs: [build-windows, build-linux, build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download Artifacts
@@ -95,7 +110,7 @@ jobs:
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb"
+          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb,./artifacts/Android-Build/*.apk"
           tag: "latest"
           name: "Latest Continuous Build"
           body: "This release contains the latest build of the Server Monitor."
