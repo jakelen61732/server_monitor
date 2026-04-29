@@ -1,20 +1,25 @@
 @echo off
-echo Creating virtual environment...
-python -m venv .venv
-if %ERRORLEVEL% NEQ 0 (
-    echo [ERROR] Failed to create virtual environment. 
-    echo Please ensure Python is installed correctly and you have permissions to write to this folder.
+echo Detected OS: Windows
+
+:: Check for Python
+python --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo [ERROR] Python is not installed or not in your PATH.
     pause
     exit /b
 )
 
-echo Activating...
+:: Create Virtual Environment
+if not exist ".venv" (
+    echo Creating virtual environment...
+    python -m venv .venv
+)
+
+:: Install Dependencies
+echo Installing dependencies...
 call .venv\Scripts\activate.bat
-
-echo Installing dependencies from requirements.txt...
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 
-echo.
-echo Setup complete! To activate in the future, run: .\.venv\Scripts\activate
+echo Setup complete. Run 'python server_monitor.py' to start the monitor.
 pause

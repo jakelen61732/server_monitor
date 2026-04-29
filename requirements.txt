@@ -1,16 +1,16 @@
 # Web Server & Real-time Communication
-flask>=2.0.0
-flask-socketio>=5.0.0
-gevent>=21.0.0
+flask>=3.0.0
+flask-socketio>=5.3.0
+gevent>=24.0.0
 gevent-websocket>=0.10.1
-waitress>=2.0.0
+waitress>=3.0.0
 
 # Hardware Monitoring
-psutil>=5.8.0
+psutil>=6.0.0
 gputil>=1.4.0
 pyghmi>=1.6.15
-pythonnet>=3.0.1
+pythonnet>=3.0.3
 
 # GUI & Distribution
-pywebview>=4.0.0
+pywebview>=5.0.0
 pyinstaller>=5.0.0

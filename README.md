@@ -4,12 +4,13 @@ A professional, cross-platform server monitoring tool with a real-time web dashb
 
 ## 🚀 Features
 
-- **Real-Time Monitoring**: Live updates for CPU, RAM, Disk, and Network usage.
-- **Top Processes**: View the most memory-intensive processes currently running.
-- **Hardware Details**: Automated detection of CPU model, RAM speed, and GPU load.
-- **Interactive Desktop GUI**: Standalone frameless window support using `pywebview`.
-- **Terminal Configuration**: Built-in menu for easy Host and Port management.
-- **Cross-Platform**: Optimized for Windows, Linux, and Android (Termux).
+- **Layered Hardware Cards**: Real-time monitoring for CPU, RAM, GPU, Disk, and Power with integrated background sparklines for historical context.
+- **Process Intelligence**: Advanced grouping of system processes with auto-cleaned names (no `.exe`), instance counting, and keyword-based smart icons.
+- **Network Analytics**: Unified dual-dataset visualization for Upload/Download speeds with real-time ping and browser latency tracking.
+- **Premium Aesthetics**: Custom HTML tooltips with backdrop-blur effects, smooth sliding animations, and centralized backend theme management.
+- **Data Precision**: All units (GB, MB, KB/s) are formatted on the backend for consistency, with normalized CPU reporting across all logical cores.
+- **Desktop GUI**: A standalone, frameless desktop experience powered by `pywebview` with integrated window controls.
+- **Cross-Platform**: Tailored optimizations for Windows (LHM/WMI), Linux (sysfs), and Android (Termux).
 
 ## 📸 Screenshots
 
@@ -20,10 +21,10 @@ A professional, cross-platform server monitoring tool with a real-time web dashb
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python, Flask, Gevent, SocketIO.
-- **Frontend**: Tailwind CSS, Chart.js, Socket.IO Client.
-- **Monitoring**: Psutil, GPUtil.
-- **GUI**: PyWebView.
+- **Backend**: Python, Flask-SocketIO, Gevent (High-concurrency networking).
+- **Frontend**: Tailwind CSS v4, Chart.js (Custom sparklines), Socket.IO Client.
+- **Monitoring**: Psutil, GPUtil, LibreHardwareMonitor (via PythonNet), WMI.
+- **GUI**: PyWebView (Edge Chromium engine support).
 
 ## 📦 Installation
 
@@ -98,4 +99,55 @@ server_monitor/
 
 ## 📝 License
 
-MIT License. Developed by KJAYDev.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. Developed by KJAYDev.
+
+## 🙏 Acknowledgements
+
+This project is built upon the incredible work of the open-source community. Special thanks to:
+
+- [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor) - Essential hardware sensing library for Windows sensors.
+- [psutil](https://github.com/giampaolo/psutil) - Robust system utilization and process management.
+- [Flask-SocketIO](https://github.com/miguelgrinberg/Flask-SocketIO) - Seamless real-time data streaming logic.
+- [Tailwind CSS](https://tailwindcss.com/) - The utility-first CSS framework for our modern, responsive UI.
+- [Chart.js](https://www.chartjs.org/) - High-performance charting and background sparklines.
+- [pywebview](https://github.com/r0x0r/pywebview) - Cross-platform desktop GUI wrapper for the dashboard.
+- [GPUtil](https://github.com/anderskm/gputil) - GPU utilization tracking and monitoring.
+- [Python.NET](https://github.com/pythonnet/pythonnet) - The bridge allowing Python to interface with .NET hardware libraries.
+- [Gemini](https://deepmind.google/technologies/gemini/) - AI companion responsible for code refactoring, architectural optimization, and UI/UX enhancements.
+
+## 🛠️ Development
+
+To set up a local environment for testing or adding new features:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/jakelen61732/server_monitor.git
+   cd server_monitor
+   ```
+2. **Initialize the environment**: Run `setup.bat` (Windows) or `./setup.sh` (Linux).
+3. **UI Customization**: The dashboard uses Tailwind CSS. To modify styles, edit `static/style.css`.
+4. **Hardware Testing**: You can run `python monitor_core/stats.py` directly to debug raw sensor output in the terminal.
+5. **Run in Debug Mode**: Launch with `python server_monitor.py` to see real-time SocketIO logs.
+
+For bundling changes, refer to the `build_exe.bat` script.
+
+## 🛠️ Troubleshooting
+
+### Windows: Sensor Data Missing (N/A)
+If hardware metrics like **CPU Temperature**, **GPU Load**, or **Power Consumption** show as `N/A`:
+
+- **Administrator Privileges**: These sensors require direct access to hardware registers. Ensure you are running the terminal (CMD/PowerShell) or the standalone EXE as an **Administrator**.
+- **Driver Support**: Ensure you have the latest chipset and GPU drivers installed.
+- **UAC Prompt**: The application is designed to request elevation automatically, but if it fails, right-click `server_monitor.py` or the built EXE and select **"Run as Administrator"**.
+
+## 🤝 Contribution
+
+Contributions make the open-source community an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. **Fork the Project**
+2. **Create your Feature Branch** (`git checkout -b feature/AmazingFeature`)
+3. **Commit your Changes** (`git commit -m 'Add some AmazingFeature'`)
+4. **Push to the Branch** (`git push origin feature/AmazingFeature`)
+5. **Open a Pull Request**
+
+For bugs and feature requests, please open an issue.

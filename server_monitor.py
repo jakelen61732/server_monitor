@@ -29,6 +29,7 @@ from monitor_core.stats import (
     get_cpu_percent, get_temperature, get_ram_info, get_disk_info,
     get_system_uptime, get_external_latency, get_top_processes, get_gpu_load,
     get_cpu_model, get_gpu_name, get_ram_details, get_network_speed, get_power_stats, get_cpu_freq,
+    get_motherboard_name, get_storage_stats, get_network_names, get_memory_lhm_info, shutdown_lhm,
     HAS_GPUTIL, HAS_PSUTIL
 )
 
@@ -66,23 +67,53 @@ except ImportError:
     HAS_WEBVIEW = False
 
 def get_app_uptime():
-    return format_duration((datetime.now() - APP_START_TIME).total_seconds())
+    return (datetime.now() - APP_START_TIME).total_seconds()
 
 @app.route('/')
 def index():
     try:
-        total, _, _ = shutil.disk_usage("/")
+        storage_list, s_total_gb, s_free_gb = get_storage_stats()
+        
+        storage_info = {
+            "list": storage_list,
+            "total": format_bytes(s_total_gb * (1024**3)),
+            "free": format_bytes(s_free_gb * (1024**3)),
+            "summary": f"{format_bytes(s_free_gb * (1024**3))} / {format_bytes(s_total_gb * (1024**3))}"
+        }
+
         ram_speed, ram_form = get_ram_details()
+        
+        # Refactor: format adapter descriptions in the route
+        adapters_raw = get_network_names()
+        network_list = [f"NIC: {name}" for name in adapters_raw] if adapters_raw else []
+
+        # Centralized theme colors for Chart.js consistency
+        chart_colors = {
+            "grid": "#374151",
+            "text": "#9ca3af",
+            "cpu": "#f97316",
+            "ram": "#3b82f6",
+            "gpu": "#a855f7",
+            "disk": "#22c55e",
+            "power": "#eab308",
+            "net_up": "#a855f7",
+            "net_down": "#3b82f6"
+        }
+
         return render_template(
             'dashboard.html',
             python_version=sys.version.split(" ")[0],
             os_info=CURRENT_OS,
-            cpu_model=get_cpu_model(),
-            gpu_name=get_gpu_name(),
+            cpu_model=get_cpu_model() or "Unknown Processor",
+            gpu_name=get_gpu_name() or "Not Detected",
             gpu_load_supported=HAS_GPUTIL,
             ram_speed=ram_speed,
             ram_form=ram_form,
-            total_disk=format_bytes(total),
+            motherboard=get_motherboard_name() or "Generic Motherboard",
+            storage=storage_info,
+            memory_lhm=get_memory_lhm_info(),
+            network_list=network_list,
+            chart_colors=chart_colors,
             architecture=platform.machine(),
             server_host=SERVER_HOST if SERVER_HOST != "0.0.0.0" else "127.0.0.1",
             server_port=SERVER_PORT
@@ -116,34 +147,71 @@ def background_stats_thread():
     print("Starting background stats broadcast...")
     try:
         while True:
-            ram_percent, ram_used, ram_total = get_ram_info()
-            disk_percent, disk_free, disk_total = get_disk_info()
-            up_str, down_str, up_raw, down_raw = get_network_speed()
-            
-            stats_data = {
-                "cpu": get_cpu_percent(),
-                "temp": get_temperature(),
-                "cpu_freq": get_cpu_freq(),
-                "ram": ram_percent,
-                "disk": disk_percent,
-                "disk_free": disk_free,
-                "disk_total": disk_total,
-                "ram_used": ram_used,
-                "ram_total": ram_total,
-                "net_up": up_str,
-                "net_down": down_str,
-                "net_up_raw": up_raw,
-                "net_down_raw": down_raw,
-                "system_uptime": get_system_uptime(),
-                "app_uptime": get_app_uptime(),
-                "internet_ping": get_external_latency(),
-                "processes": get_top_processes(),
-                "gpu_load": get_gpu_load(),
-                "power": get_power_stats()
-            }
-            
-            # Broadcast to all connected clients
-            socketio.emit('stats_response', stats_data)
+            try:
+                ram_percent, ram_used, ram_total = get_ram_info()
+                disk_percent, disk_free_bytes, disk_total_bytes = get_disk_info()
+                net_speed_raw = get_network_speed()
+                
+                power_raw = get_power_stats()
+                power_data = None
+                if power_raw:
+                    power_data = {
+                        **power_raw,
+                        "watts_str": f"{power_raw['watts']:.1f} W",
+                        "voltage_str": f"{power_raw['voltage']:.1f}V",
+                        "amps_str": f"{power_raw['amps']:.2f}A",
+                        "fan_str": f"{power_raw['fan_rpm']} RPM" if power_raw.get('fan_rpm', 0) > 0 else None,
+                        "gpu_temp_str": f"GPU: {power_raw['gpu_temp']:.1f}°C" if power_raw.get('gpu_temp', 0) > 0 else None
+                    }
+                
+                storage_list, storage_total_gb, storage_free_gb = get_storage_stats()
+
+                cpu_freq_raw = get_cpu_freq()
+                cpu_temp_raw = get_temperature()
+                gpu_load_raw = get_gpu_load()
+                sys_uptime_raw = get_system_uptime()
+
+                ping_raw = get_external_latency()
+                ping_data = None
+                if ping_raw is not None:
+                    if ping_raw < 100: p_color = "text-green-400"
+                    elif ping_raw < 300: p_color = "text-yellow-400"
+                    else: p_color = "text-red-400"
+                    ping_data = {"display": f"{ping_raw:.1f}ms", "color": p_color}
+                else:
+                    ping_data = {"display": "Offline", "color": "text-red-600"}
+                
+                stats_data = {
+                    "cpu": get_cpu_percent(),
+                    "temp": f"{cpu_temp_raw:.1f}°C" if cpu_temp_raw is not None else None,
+                    "cpu_freq": round(cpu_freq_raw, 1) if cpu_freq_raw is not None else None,
+                    "ram": ram_percent,
+                    "disk": disk_percent,
+                    "disk_free": format_bytes(disk_free_bytes),
+                    "disk_total": format_bytes(disk_total_bytes),
+                    "ram_used": format_bytes(ram_used),
+                    "ram_total": format_bytes(ram_total),
+                    "net_up": f"{format_bytes(net_speed_raw['up'])}/s" if net_speed_raw['up'] is not None else "N/A",
+                    "net_down": f"{format_bytes(net_speed_raw['down'])}/s" if net_speed_raw['down'] is not None else "N/A",
+                    "net_up_raw": net_speed_raw['up'],
+                    "net_down_raw": net_speed_raw['down'],
+                    "system_uptime": format_duration(sys_uptime_raw) if sys_uptime_raw is not None else "N/A",
+                    "app_uptime": format_duration(get_app_uptime()),
+                    "internet_ping": ping_data,
+                    "processes": get_top_processes(),
+                    "gpu_load": f"{gpu_load_raw:.1f}%" if gpu_load_raw is not None else "N/A",
+                    "gpu_load_raw": gpu_load_raw,
+                    "power": power_data,
+                    "storage_list": storage_list,
+                    "storage_total": format_bytes(storage_total_gb * (1024**3)),
+                    "storage_free": format_bytes(storage_free_gb * (1024**3))
+                }
+                
+                # Broadcast to all connected clients
+                socketio.emit('stats_response', stats_data)
+            except Exception as e:
+                print(f"[Thread Error] Intermittent monitoring failure: {e}")
+
             socketio.sleep(1) # Yield to other tasks for 1 second
     except (KeyboardInterrupt, SystemExit):
         print("\n[Thread] Background stats thread stopping...")
@@ -166,10 +234,11 @@ def health_check():
     """
     Provides a simple health check endpoint.
     """
+    sys_uptime_raw = get_system_uptime()
     return jsonify({
         "status": "UP",
-        "app_uptime": get_app_uptime(),
-        "system_uptime": get_system_uptime(),
+        "app_uptime": format_duration(get_app_uptime()),
+        "system_uptime": format_duration(sys_uptime_raw) if sys_uptime_raw is not None else "N/A",
         "timestamp": datetime.now().isoformat()
     })
 
@@ -288,66 +357,49 @@ if __name__ == '__main__':
 
     url = f"http://{ui_host}:{SERVER_PORT}"
     
-    if HAS_WEBVIEW and not OPEN_EXTERNAL_BROWSER:
-        # Run server in a background thread so webview can take the main thread.
-        # gevent's monkey patching ensures this thread behaves correctly with the hub.
-        threading.Thread(target=run_server, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
-        
-        class WebviewAPI:
-            """API exposed to the Javascript 'window.pywebview.api' object."""
-            def __init__(self):
-                self.window = None
-            def close(self):
-                if self.window: self.window.destroy()
-            def minimize(self):
-                if self.window: self.window.minimize()
-            def toggle_maximize(self):
-                if not self.window: return
-                # pywebview doesn't expose a state check for maximization,
-                # so we track it internally to provide a toggle effect.
-                if not hasattr(self, '_is_maximized'): self._is_maximized = False
-                if self._is_maximized:
-                    self.window.restore()
-                else:
-                    self.window.maximize()
-                self._is_maximized = not self._is_maximized
-                return self._is_maximized
+    try:
+        if HAS_WEBVIEW and not OPEN_EXTERNAL_BROWSER:
+            # Run server in a background thread so webview can take the main thread.
+            threading.Thread(target=run_server, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
+            
+            class WebviewAPI:
+                def __init__(self): self.window = None
+                def close(self): 
+                    if self.window: self.window.destroy()
+                def minimize(self): 
+                    if self.window: self.window.minimize()
+                def toggle_maximize(self):
+                    if not self.window: return
+                    if not hasattr(self, '_is_maximized'): self._is_maximized = False
+                    if self._is_maximized: self.window.restore()
+                    else: self.window.maximize()
+                    self._is_maximized = not self._is_maximized
+                    return self._is_maximized
 
-        api = WebviewAPI()
-        print(f"[INFO] Launching Desktop Monitor: {url}")
-        try:
-            # Setting min_size helps the Windows Window Manager stabilize frameless resizing.
-            api.window = webview.create_window(
-                'Server Monitor', 
-                url, 
-                width=1200, 
-                height=900, 
-                min_size=(800, 600),
-                on_top=False, 
-                frameless=True, 
-                resizable=True, 
-                background_color='#111827',
-                js_api=api
-            )
+            api = WebviewAPI()
+            print(f"[INFO] Launching Desktop Monitor: {url}")
             try:
-                # Primary attempt: Force modern WebView2 (Edge Chromium)
-                webview.start(gui='edgechromium')
-            except Exception:
-                # Secondary attempt: Let pywebview auto-detect (EdgeHTML or MSHTML fallback)
-                print("[INFO] 'edgechromium' engine not available, falling back to system default.")
-                webview.start()
-        except Exception as e:
-            print(f"[ERROR] PyWebView failed: {e}")
-            # Fallback to standard browser if GUI fails to initialize
-            webbrowser.open(url)
-            while True: time.sleep(1)
-    else:
-        # Original browser-based flow
-        threading.Thread(target=launch_browser, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
-        try:
+                api.window = webview.create_window(
+                    'Server Monitor', url, width=1200, height=900, min_size=(800, 600),
+                    on_top=False, frameless=True, resizable=True, background_color='#111827',
+                    js_api=api
+                )
+                try:
+                    webview.start(gui='edgechromium')
+                except Exception:
+                    print("[INFO] 'edgechromium' engine not available, falling back to system default.")
+                    webview.start()
+            except Exception as e:
+                print(f"[ERROR] PyWebView failed: {e}")
+                webbrowser.open(url)
+                while True: time.sleep(1)
+        else:
+            # Original browser-based flow
+            threading.Thread(target=launch_browser, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
             run_server(SERVER_HOST, SERVER_PORT)
-        except Exception as e:
-            print(f"\n[CRITICAL] Server failed to start: {e}")
-            if "10048" in str(e):
-                print(f"[HINT] Port {SERVER_PORT} is already in use by another application.")
-            input("\nPress Enter to exit...")
+    except KeyboardInterrupt:
+        print("\n[INFO] Monitor stopping...")
+    finally:
+        shutdown_lhm()
+        # Use hard exit to prevent noisy pythonnet atexit tracebacks
+        os._exit(0)

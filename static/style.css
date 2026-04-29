@@ -64,3 +64,20 @@ button, a, .cursor-pointer, [onclick] {
 .pywebview-drag-region {
     cursor: move !important;
 }
+
+.chart-custom-tooltip {
+    background: rgba(17, 24, 39, 0.9) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(75, 85, 99, 0.4) !important;
+    border-radius: 8px !important;
+    color: #f3f4f6 !important;
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    transform: translate(-50%, -100%);
+    padding: 8px !important;
+    font-family: monospace !important;
+    z-index: 100;
+    pointer-events: none;
+}
