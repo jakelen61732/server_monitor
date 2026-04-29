@@ -389,7 +389,6 @@ socket.on('stats_response', (data) => {
             <td class="px-4 py-1 text-right text-orange-400 font-mono">${p.cpu.toFixed(1)}%</td>
             <td class="px-4 py-1 text-right text-blue-400 font-mono">${p.memory_str}</td>
             <td class="px-4 py-1 text-right text-green-400 font-mono">${p.disk_str}</td>
-            <td class="px-4 py-1 text-right text-purple-400 font-mono">${p.net_str}</td>
         </tr>
     `).join('');
 

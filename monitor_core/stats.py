@@ -522,8 +522,7 @@ def get_top_processes():
                     'count': 1,
                     'memory': mem,
                     'cpu': cpu,
-                    'disk': disk_speed,
-                    'network': 0
+                    'disk': disk_speed
                 }
             else:
                 groups[group_key]['count'] += 1
@@ -545,8 +544,7 @@ def get_top_processes():
             "count": g['count'],
             "cpu": round(min(g['cpu'], 100.0), 1),
             "memory_str": format_bytes(g['memory']),
-            "disk_str": f"{format_bytes(g['disk'])}/s",
-            "net_str": "0.0 B/s" # Placeholder as per psutil limitations
+            "disk_str": f"{format_bytes(g['disk'])}/s"
         })
 
     return {
