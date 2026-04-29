@@ -26,10 +26,13 @@ jobs:
         python -m PyInstaller --noconfirm --onefile --noconsole `
           --name="Server-Monitor" `
           --icon="favicon-64x64.ico" `
+          --uac-admin `
+          --collect-all pyghmi `
           --add-data "favicon.ico;." `
           --add-data "static;static" `
           --add-data "templates;templates" `
           --add-data "monitor_core;monitor_core" `
+          --add-data "lib;lib" `
           --version-file="file_version_info.txt" `
           --hidden-import=gevent `
           --hidden-import=engineio.async_drivers.gevent `
@@ -57,10 +60,12 @@ jobs:
     - name: Build Linux Binary
       run: |
         pyinstaller --noconfirm --onefile --name="Server-Monitor" \
+          --collect-all pyghmi \
           --add-data "favicon.ico:." \
           --add-data "static:static" \
           --add-data "templates:templates" \
           --add-data "monitor_core:monitor_core" \
+          --add-data "lib:lib" \
           --hidden-import=gevent \
           --hidden-import=engineio.async_drivers.gevent \
           --hidden-import=geventwebsocket.gws \
