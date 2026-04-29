@@ -32,14 +32,14 @@ def load_config():
                 return json.load(f)
         except Exception:
             pass
-    return {"host": "127.0.0.1", "port": 3000}
+    return {"host": "127.0.0.1", "port": 3000, "open_external": False}
 
-def save_config(host, port):
-    """Saves the current host and port to config.json."""
+def save_config(host, port, open_external):
+    """Saves the configuration to config.json."""
     config_path = get_config_path()
     try:
         with open(config_path, 'w') as f:
-            json.dump({"host": host, "port": port}, f, indent=4)
+            json.dump({"host": host, "port": port, "open_external": open_external}, f, indent=4)
     except Exception as e:
         print(f"[ERROR] Could not save config: {e}")
 

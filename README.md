@@ -17,6 +17,7 @@ A professional, cross-platform server monitoring tool with a real-time web dashb
 | :---: | :---: |
 | ![Dashboard](screenshots/dashboard.png) | ![System Details](screenshots/system_details.png) |
 
+
 ## 🛠️ Tech Stack
 
 - **Backend**: Python, Flask, Gevent, SocketIO.

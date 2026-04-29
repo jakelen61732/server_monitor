@@ -35,10 +35,13 @@ rem Note: Ensure there are NO trailing spaces after any of the carets (^) below
 python -m PyInstaller --noconfirm --onefile --noconsole --upx-dir=./upx ^
     --name="Server Monitor" ^
     --icon="favicon-64x64.ico" ^
+    --uac-admin ^
+    --collect-all pyghmi ^
     --add-data "favicon.ico;." ^
     --add-data "static;static" ^
     --add-data "templates;templates" ^
     --add-data "monitor_core;monitor_core" ^
+    --add-data "lib;lib" ^
     --version-file="file_version_info.txt" ^
     --hidden-import=gevent ^
     --hidden-import=engineio.async_drivers.gevent ^

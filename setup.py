@@ -19,6 +19,8 @@ setup(
         "psutil>=5.8.0",
         "gputil>=1.4.0",
         "pywebview>=4.0.0",
+        "pyghmi>=1.6.15",
+        "pythonnet>=3.0.1",
     ],
     python_requires=">=3.7",
     classifiers=[

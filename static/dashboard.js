@@ -90,6 +90,49 @@ const cpuChart = new Chart(ctx, {
     }
 });
 
+function createSparkline(elementId, color, max = 100) {
+    const canvas = document.getElementById(elementId);
+    if (!canvas) return null;
+    return new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: Array(60).fill(''),
+            datasets: [{
+                data: Array(60).fill(0),
+                borderColor: color,
+                borderWidth: 1.5,
+                fill: false,
+                tension: 0.4,
+                pointRadius: 0,
+                clip: 2
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { 
+                x: { display: false }, 
+                y: { display: false, min: 0, max: max === 'auto' ? undefined : max } 
+            },
+            animation: { duration: 0 }
+        }
+    });
+}
+
+const cpuSpark = createSparkline('cpuSparkline', '#f97316'); // Orange
+const ramSpark = createSparkline('ramSparkline', '#3b82f6'); // Blue
+const diskSpark = createSparkline('diskSparkline', '#22c55e'); // Green
+const powerSpark = createSparkline('powerSparkline', '#eab308', 'auto'); // Yellow
+const netDownSpark = createSparkline('netDownSparkline', '#3b82f6', 'auto');
+const netUpSpark = createSparkline('netUpSparkline', '#a855f7', 'auto');
+
+function updateSpark(chart, value) {
+    if (!chart) return;
+    chart.data.datasets[0].data.push(value);
+    chart.data.datasets[0].data.shift();
+    chart.update();
+}
+
 window.switchTab = function(tab) {
     const wrapper = document.getElementById('tab-wrapper');
     const indicator = document.getElementById('tab-indicator');
@@ -127,6 +170,22 @@ window.handleToggleMaximize = async function() {
 
 const socket = io();
 
+socket.on('connect', () => {
+    // Update Live Indicator
+    document.getElementById('status-text').innerText = 'Live';
+    document.getElementById('status-text').classList.replace('text-red-500', 'text-gray-400');
+    document.getElementById('status-ping').classList.replace('bg-red-400', 'bg-green-400');
+    document.getElementById('status-dot').classList.replace('bg-red-500', 'bg-green-500');
+});
+
+socket.on('disconnect', () => {
+    // Update Live Indicator
+    document.getElementById('status-text').innerText = 'Offline';
+    document.getElementById('status-text').classList.replace('text-gray-400', 'text-red-500');
+    document.getElementById('status-ping').classList.replace('bg-green-400', 'bg-red-400');
+    document.getElementById('status-dot').classList.replace('bg-green-500', 'bg-red-500');
+});
+
 setInterval(() => {
     socket.emit('ping_server', { startTime: performance.now() });
 }, 2000);
@@ -152,12 +211,31 @@ socket.on('stats_response', (data) => {
     }
 
     document.getElementById('cpu-usage').innerText = data.cpu + '%';
-    document.getElementById('cpu-temp').innerText = data.temp;
+    document.getElementById('cpu-sub').innerText = data.temp + (data.cpu_freq ? ` • ${data.cpu_freq} GHz` : '');
     document.getElementById('ram-usage').innerText = data.ram + '%';
     document.getElementById('disk-usage').innerText = data.disk + '%';
+    document.getElementById('disk-details').innerText = data.disk_free + ' GB Free / ' + data.disk_total + ' GB';
     document.getElementById('net-up').innerText = data.net_up;
     document.getElementById('net-down').innerText = data.net_down;
     document.getElementById('ram-details').innerText = data.ram_used + ' GB / ' + data.ram_total + ' GB';
+
+    if (data.power) {
+        document.getElementById('power-watts').innerText = data.power.watts + ' W';
+        let subParts = [`${data.power.voltage}V`, `${data.power.amps}A` ];
+        
+        if (data.power.fan_rpm > 0) subParts.push(`${data.power.fan_rpm} RPM`);
+        if (data.power.gpu_temp > 0) subParts.push(`GPU: ${data.power.gpu_temp}°C`);
+        
+        document.getElementById('power-sub').innerText = subParts.join(' • ');
+        updateSpark(powerSpark, data.power.watts);
+    }
+
+    updateSpark(cpuSpark, data.cpu);
+    updateSpark(ramSpark, data.ram);
+    updateSpark(diskSpark, data.disk);
+    updateSpark(netDownSpark, data.net_down_raw);
+    updateSpark(netUpSpark, data.net_up_raw);
+
     document.getElementById('system-uptime').innerText = data.system_uptime;
     document.getElementById('app-uptime').innerText = data.app_uptime;
     

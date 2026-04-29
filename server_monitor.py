@@ -26,9 +26,9 @@ from monitor_core.utils import (
     format_duration, get_local_ip, ensure_port_available, format_bytes, launch_browser
 )
 from monitor_core.stats import (
-    get_cpu_percent, get_temperature, get_ram_info, get_disk_percent,
+    get_cpu_percent, get_temperature, get_ram_info, get_disk_info,
     get_system_uptime, get_external_latency, get_top_processes, get_gpu_load,
-    get_cpu_model, get_gpu_name, get_ram_details, get_network_speed,
+    get_cpu_model, get_gpu_name, get_ram_details, get_network_speed, get_power_stats, get_cpu_freq,
     HAS_GPUTIL, HAS_PSUTIL
 )
 
@@ -48,6 +48,7 @@ socketio = SocketIO(
 _cfg = load_config()
 SERVER_HOST = _cfg.get("host", "127.0.0.1")
 SERVER_PORT = _cfg.get("port", 3000)
+OPEN_EXTERNAL_BROWSER = _cfg.get("open_external", False)
 
 # Threading control for background task
 thread = None
@@ -116,22 +117,29 @@ def background_stats_thread():
     try:
         while True:
             ram_percent, ram_used, ram_total = get_ram_info()
-            up, down = get_network_speed()
+            disk_percent, disk_free, disk_total = get_disk_info()
+            up_str, down_str, up_raw, down_raw = get_network_speed()
             
             stats_data = {
                 "cpu": get_cpu_percent(),
                 "temp": get_temperature(),
+                "cpu_freq": get_cpu_freq(),
                 "ram": ram_percent,
-                "disk": get_disk_percent(),
+                "disk": disk_percent,
+                "disk_free": disk_free,
+                "disk_total": disk_total,
                 "ram_used": ram_used,
                 "ram_total": ram_total,
-                "net_up": up,
-                "net_down": down,
+                "net_up": up_str,
+                "net_down": down_str,
+                "net_up_raw": up_raw,
+                "net_down_raw": down_raw,
                 "system_uptime": get_system_uptime(),
                 "app_uptime": get_app_uptime(),
                 "internet_ping": get_external_latency(),
                 "processes": get_top_processes(),
-                "gpu_load": get_gpu_load()
+                "gpu_load": get_gpu_load(),
+                "power": get_power_stats()
             }
             
             # Broadcast to all connected clients
@@ -170,6 +178,14 @@ def run_server(host, port):
     socketio.run(app, host=host, port=port, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
+    # Automatically request Admin privileges on Windows for LibreHardwareMonitor access
+    if platform.system() == "Windows":
+        import ctypes
+        if not ctypes.windll.shell32.IsUserAnAdmin():
+            # Relaunch the program with admin rights
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
+            sys.exit(0)
+
     # Detect if we have an interactive console (Standard mode vs Windowed mode)
     is_interactive = sys.stdin and sys.stdin.isatty()
 
@@ -188,12 +204,13 @@ if __name__ == '__main__':
         print(f" 2. Edit Port  [Current: {SERVER_PORT}]")
         print(f" 3. Run Server [Status: {status}]")
         print(f" 4. Check Network Info")
+        print(f" 5. Open External Browser [Current: {OPEN_EXTERNAL_BROWSER}]")
         print("-" * 40)
         print(" Press Ctrl+C to Exit")
         print("-" * 40)
         
         try:
-            choice = input("Select an option (1-4): ").strip()
+            choice = input("Select an option (1-5): ").strip()
             
             if choice == '1':
                 print("\n--- Host Configuration ---")
@@ -206,7 +223,7 @@ if __name__ == '__main__':
                         if new_host != "localhost":
                             socket.inet_aton(new_host)
                         SERVER_HOST = new_host
-                        save_config(SERVER_HOST, SERVER_PORT)
+                        save_config(SERVER_HOST, SERVER_PORT, OPEN_EXTERNAL_BROWSER)
                     except socket.error:
                         print("[ERROR] Invalid IP address format.")
                         time.sleep(1.5)
@@ -221,7 +238,7 @@ if __name__ == '__main__':
                         p = int(new_port)
                         if 1024 <= p <= 65535:
                             SERVER_PORT = p
-                            save_config(SERVER_HOST, SERVER_PORT)
+                            save_config(SERVER_HOST, SERVER_PORT, OPEN_EXTERNAL_BROWSER)
                         else:
                             print("[ERROR] Port must be between 1024 and 65535.")
                             time.sleep(1.5)
@@ -245,6 +262,12 @@ if __name__ == '__main__':
                 print("\n Use the Local IP if you want other devices to access the monitor.")
                 input("\n Press Enter to return to menu...")
 
+            elif choice == '5':
+                OPEN_EXTERNAL_BROWSER = not OPEN_EXTERNAL_BROWSER
+                save_config(SERVER_HOST, SERVER_PORT, OPEN_EXTERNAL_BROWSER)
+                print(f"\n[INFO] Open External Browser set to: {OPEN_EXTERNAL_BROWSER}")
+                time.sleep(1)
+
             else:
                 print("\n[ERROR] Invalid selection.")
                 time.sleep(1)
@@ -265,7 +288,7 @@ if __name__ == '__main__':
 
     url = f"http://{ui_host}:{SERVER_PORT}"
     
-    if HAS_WEBVIEW:
+    if HAS_WEBVIEW and not OPEN_EXTERNAL_BROWSER:
         # Run server in a background thread so webview can take the main thread.
         # gevent's monkey patching ensures this thread behaves correctly with the hub.
         threading.Thread(target=run_server, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()

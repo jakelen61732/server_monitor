@@ -8,6 +8,8 @@ waitress>=2.0.0
 # Hardware Monitoring
 psutil>=5.8.0
 gputil>=1.4.0
+pyghmi>=1.6.15
+pythonnet>=3.0.1
 
 # GUI & Distribution
 pywebview>=4.0.0

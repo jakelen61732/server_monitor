@@ -82,7 +82,6 @@ jobs:
         name: Linux-Build
         path: Server-Monitor.deb
 
-
   publish-release:
     permissions: write-all
     needs: [build-windows, build-linux]
