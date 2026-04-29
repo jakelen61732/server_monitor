@@ -1,4 +1,3 @@
-// Read configuration from HTML data attributes
 const gpuSupported = document.body.dataset.gpuSupported === 'true';
 const gridColor = document.body.dataset.gridColor;
 const textColor = document.body.dataset.textColor;
@@ -10,16 +9,14 @@ const powerColor = document.body.dataset.powerColor;
 const netUpColor = document.body.dataset.netUpColor;
 const netDownColor = document.body.dataset.netDownColor;
 
-// Custom HTML Tooltip Implementation for Blur and Rounded Corners
 const externalTooltipHandler = (context) => {
-    const {chart, tooltip} = context;
+    const { chart, tooltip } = context;
     const container = chart.canvas.closest('.relative') || chart.canvas.parentNode;
     let tooltipEl = container.querySelector('div.chart-custom-tooltip');
 
     if (!tooltipEl) {
         tooltipEl = document.createElement('div');
         tooltipEl.classList.add('chart-custom-tooltip');
-        // Smooth gliding transition between data points
         tooltipEl.style.transition = 'opacity 0.15s ease, left 0.3s cubic-bezier(0.2, 1, 0.2, 1), top 0.3s cubic-bezier(0.2, 1, 0.2, 1)';
         container.appendChild(tooltipEl);
     }
@@ -47,14 +44,12 @@ const externalTooltipHandler = (context) => {
         tooltipEl.innerHTML = innerHtml;
     }
 
-    const {offsetLeft: positionX, offsetTop: positionY} = chart.canvas;
+    const { offsetLeft: positionX, offsetTop: positionY } = chart.canvas;
     tooltipEl.style.opacity = 1;
-    // Position at caret with vertical offset
     tooltipEl.style.left = (positionX + tooltip.caretX) + 'px';
     tooltipEl.style.top = (positionY + tooltip.caretY - 10) + 'px';
 };
 
-// Smart Icon Mapper based on process keywords
 function getAppIcon(name) {
     const n = name.toLowerCase();
     const icons = {
@@ -71,7 +66,7 @@ function getAppIcon(name) {
     if (n.includes('python') || n.includes('conda')) return icons.python;
     if (n.includes('cmd') || n.includes('powershell') || n.includes('bash') || n.includes('term') || n.includes('conhost')) return icons.terminal;
     if (n.includes('system') || n.includes('svchost') || n.includes('kernel') || n.includes('service') || n.includes('wininit')) return icons.system;
-    
+
     return icons.generic;
 }
 
@@ -96,12 +91,11 @@ function createSparkline(elementId, color, max = 100, unit = '%') {
                 borderColor: color,
                 backgroundColor: (context) => {
                     const chart = context.chart;
-                    const {ctx, chartArea} = chart;
+                    const { ctx, chartArea } = chart;
                     if (!chartArea) return null;
-                    // Create a vertical gradient from the top of the chart area to the bottom
                     const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                    gradient.addColorStop(0, color + '60'); // Vibrant peak
-                    gradient.addColorStop(1, color + '00'); // Fade to transparent
+                    gradient.addColorStop(0, color + '60');
+                    gradient.addColorStop(1, color + '00');
                     return gradient;
                 },
                 borderWidth: 1.5,
@@ -113,24 +107,24 @@ function createSparkline(elementId, color, max = 100, unit = '%') {
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false }, 
-                tooltip: { 
+            plugins: {
+                legend: { display: false },
+                tooltip: {
                     enabled: false,
                     external: externalTooltipHandler,
                     mode: 'index',
                     intersect: false,
-                    callbacks: { 
+                    callbacks: {
                         label: (ctx) => {
                             const val = ctx.parsed.y;
                             return `Value: ${unit === 'W' ? val.toFixed(1) + ' W' : val.toFixed(1) + unit}`;
                         }
                     }
-                } 
+                }
             },
-            scales: { 
-                x: { display: false }, 
-                y: { display: false, min: 0, max: max === 'auto' ? undefined : max } 
+            scales: {
+                x: { display: false },
+                y: { display: false, min: 0, max: max === 'auto' ? undefined : max }
             },
             animation: { duration: 0 }
         }
@@ -151,7 +145,7 @@ function createDualSparkline(elementId, color1, color2, unit = 'bytes') {
                     borderColor: color1,
                     backgroundColor: (context) => {
                         const chart = context.chart;
-                        const {ctx, chartArea} = chart;
+                        const { ctx, chartArea } = chart;
                         if (!chartArea) return null;
                         const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
                         gradient.addColorStop(0, color1 + '60');
@@ -166,7 +160,7 @@ function createDualSparkline(elementId, color1, color2, unit = 'bytes') {
                     borderColor: color2,
                     backgroundColor: (context) => {
                         const chart = context.chart;
-                        const {ctx, chartArea} = chart;
+                        const { ctx, chartArea } = chart;
                         if (!chartArea) return null;
                         const gradient = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
                         gradient.addColorStop(0, color2 + '40');
@@ -179,18 +173,18 @@ function createDualSparkline(elementId, color1, color2, unit = 'bytes') {
         },
         options: {
             maintainAspectRatio: false,
-            plugins: { 
-                legend: { display: false }, 
-                tooltip: { 
+            plugins: {
+                legend: { display: false },
+                tooltip: {
                     enabled: false,
                     external: externalTooltipHandler,
                     mode: 'index',
                     intersect: false,
-                    callbacks: { 
-                        label: (ctx) => 
+                    callbacks: {
+                        label: (ctx) =>
                             `${ctx.dataset.label}: ${unit === 'bytes' ? formatBytes(ctx.parsed.y) + '/s' : ctx.parsed.y.toFixed(1)}`
                     }
-                } 
+                }
             },
             scales: { x: { display: false }, y: { display: false } },
             animation: { duration: 0 }
@@ -227,7 +221,7 @@ function updateDualSpark(chart, val1, val2) {
     chart.update();
 }
 
-window.switchTab = function(tab) {
+window.switchTab = function (tab) {
     const wrapper = document.getElementById('tab-wrapper');
     const indicator = document.getElementById('tab-indicator');
     const procBtn = document.getElementById('btn-processes');
@@ -250,7 +244,17 @@ window.switchTab = function(tab) {
     }
 }
 
-window.handleToggleMaximize = async function() {
+window.handleMinimize = function () {
+    window.pywebview?.api?.minimize();
+};
+
+window.handleClose = function () {
+    window.pywebview?.api?.close();
+};
+
+window.handleToggleMaximize = async function () {
+    if (!window.pywebview?.api) return;
+
     const isMaximized = await window.pywebview.api.toggle_maximize();
     const btn = document.getElementById('maximize-btn');
     if (isMaximized) {
@@ -265,7 +269,6 @@ window.handleToggleMaximize = async function() {
 const socket = io();
 
 socket.on('connect', () => {
-    // Update Live Indicator
     document.getElementById('status-text').innerText = 'Live';
     document.getElementById('status-text').classList.replace('text-red-500', 'text-gray-400');
     document.getElementById('status-ping').classList.replace('bg-red-400', 'bg-green-400');
@@ -273,7 +276,6 @@ socket.on('connect', () => {
 });
 
 socket.on('disconnect', () => {
-    // Update Live Indicator
     document.getElementById('status-text').innerText = 'Offline';
     document.getElementById('status-text').classList.replace('text-gray-400', 'text-red-500');
     document.getElementById('status-ping').classList.replace('bg-green-400', 'bg-red-400');
@@ -288,7 +290,7 @@ socket.on('pong_client', (data) => {
     const ping = Math.round(performance.now() - data.startTime);
     const latencyElem = document.getElementById('latency');
     latencyElem.innerText = ping + 'ms';
-    
+
     if (ping < 100) latencyElem.className = "font-mono text-green-400";
     else if (ping < 300) latencyElem.className = "font-mono text-yellow-400";
     else latencyElem.className = "font-mono text-red-400";
@@ -300,7 +302,11 @@ socket.on('stats_response', (data) => {
         loader.style.opacity = '0';
         setTimeout(() => {
             loader.remove();
-            document.body.style.overflow = 'auto';
+            document.getElementById('main-content').style.overflowY = 'auto';
+            const card = document.getElementById('dashboard-card');
+            if (card) {
+                card.classList.add('animate-entrance');
+            }
         }, 500);
     }
 
@@ -318,10 +324,10 @@ socket.on('stats_response', (data) => {
     if (data.power) {
         document.getElementById('power-watts').innerText = data.power.watts_str;
         let subParts = [data.power.voltage_str, data.power.amps_str];
-        
+
         if (data.power.fan_str) subParts.push(data.power.fan_str);
         if (data.power.gpu_temp_str) subParts.push(data.power.gpu_temp_str);
-        
+
         document.getElementById('power-sub').innerText = subParts.join(' • ');
         updateSpark(powerSpark, data.power.watts);
     }
@@ -330,9 +336,9 @@ socket.on('stats_response', (data) => {
         const listContainer = document.getElementById('storage-list-container');
         if (listContainer) {
             listContainer.innerHTML = data.storage_list.map(drive => {
-                const healthBadge = drive.health !== null ? 
+                const healthBadge = drive.health !== null ?
                     `<span class="px-1 rounded-[3px] text-[9px] font-bold border ${drive.health < 30 ? 'bg-red-500/10 text-red-400 border-red-500/30' : drive.health < 80 ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30' : 'bg-green-500/10 text-green-400 border-green-500/30'}">${Math.round(drive.health)}% LIFE</span>` : '';
-                
+
                 const throughput = [];
                 if (drive.read) throughput.push(`<span class="text-gray-500">R: <span class="text-blue-400/80">${drive.read}/s</span></span>`);
                 if (drive.write) throughput.push(`<span class="text-gray-500">W: <span class="text-purple-400/80">${drive.write}/s</span></span>`);
@@ -365,7 +371,7 @@ socket.on('stats_response', (data) => {
 
     document.getElementById('system-uptime').innerText = data.system_uptime;
     document.getElementById('app-uptime').innerText = data.app_uptime;
-    
+
     const gpuUsageElem = document.getElementById('gpu-usage');
     if (gpuUsageElem) gpuUsageElem.innerText = data.gpu_load || 'N/A';
 
@@ -396,3 +402,29 @@ socket.on('stats_response', (data) => {
     if (gpuCardUsage) gpuCardUsage.innerText = data.gpu_load || 'N/A';
     updateSpark(gpuSpark, data.gpu_load_raw ?? 0);
 });
+
+function initGuiControls() {
+    const isGui = !!window.pywebview?.api;
+    const controls = document.getElementById('gui-controls');
+
+    if (isGui) {
+        const style = document.createElement('style');
+        style.textContent = '.pywebview-drag-region { cursor: move !important; }';
+        document.head.appendChild(style);
+    } else {
+        if (controls) controls.classList.add('hidden');
+    }
+}
+window.addEventListener('load', () => setTimeout(initGuiControls, 100));
+
+const mainContent = document.getElementById('main-content');
+const mainHeader = document.getElementById('main-header');
+if (mainContent && mainHeader) {
+    mainContent.addEventListener('scroll', () => {
+        if (mainContent.scrollTop > 5) {
+            mainHeader.classList.add('header-scrolled');
+        } else {
+            mainHeader.classList.remove('header-scrolled');
+        }
+    }, { passive: true });
+}

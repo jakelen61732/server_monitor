@@ -1,7 +1,5 @@
 try:
     from gevent import monkey
-    # thread=False is CRITICAL here. It allows the Flask server to run in a 
-    # real OS thread while the main thread is blocked by the Webview GUI.
     monkey.patch_all(thread=False)
 except ImportError:
     pass
@@ -20,7 +18,6 @@ from datetime import datetime, timedelta
 from flask import Flask, jsonify, render_template, send_from_directory
 from flask_socketio import SocketIO, emit
 
-# Import core modules from the subfolder
 from monitor_core.utils import (
     load_config, save_config, get_resource_path, detect_os, 
     format_duration, get_local_ip, ensure_port_available, format_bytes, launch_browser
@@ -33,29 +30,25 @@ from monitor_core.stats import (
     HAS_GPUTIL, HAS_PSUTIL
 )
 
-# Initialize Flask with the absolute path to the templates folder
 app = Flask(__name__, 
             template_folder=get_resource_path('templates'))
 
 socketio = SocketIO(
     app, 
     cors_allowed_origins="*", 
-    async_mode=None, # Automatically selects 'gevent' if available, otherwise 'threading'
+    async_mode=None,
     ping_timeout=60, 
     ping_interval=25
 )
 
-# Initialize global variables from config
 _cfg = load_config()
 SERVER_HOST = _cfg.get("host", "127.0.0.1")
 SERVER_PORT = _cfg.get("port", 3000)
 OPEN_EXTERNAL_BROWSER = _cfg.get("open_external", False)
 
-# Threading control for background task
 thread = None
 thread_lock = Lock()
 
-# Global variable to store the application start time
 APP_START_TIME = datetime.now()
 
 CURRENT_OS = detect_os()
@@ -83,11 +76,9 @@ def index():
 
         ram_speed, ram_form = get_ram_details()
         
-        # Refactor: format adapter descriptions in the route
         adapters_raw = get_network_names()
         network_list = [f"NIC: {name}" for name in adapters_raw] if adapters_raw else []
 
-        # Centralized theme colors for Chart.js consistency
         chart_colors = {
             "grid": "#374151",
             "text": "#9ca3af",
@@ -207,12 +198,11 @@ def background_stats_thread():
                     "storage_free": format_bytes(storage_free_gb * (1024**3))
                 }
                 
-                # Broadcast to all connected clients
                 socketio.emit('stats_response', stats_data)
             except Exception as e:
                 print(f"[Thread Error] Intermittent monitoring failure: {e}")
 
-            socketio.sleep(1) # Yield to other tasks for 1 second
+            socketio.sleep(1)
     except (KeyboardInterrupt, SystemExit):
         print("\n[Thread] Background stats thread stopping...")
 
@@ -247,20 +237,15 @@ def run_server(host, port):
     socketio.run(app, host=host, port=port, debug=False, use_reloader=False)
 
 if __name__ == '__main__':
-    # Automatically request Admin privileges on Windows for LibreHardwareMonitor access
     if platform.system() == "Windows":
         import ctypes
         if not ctypes.windll.shell32.IsUserAnAdmin():
-            # Relaunch the program with admin rights
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv), None, 1)
             sys.exit(0)
 
-    # Detect if we have an interactive console (Standard mode vs Windowed mode)
     is_interactive = sys.stdin and sys.stdin.isatty()
 
-    # Only show the configuration menu if running in a terminal
     while is_interactive:
-        # Basic validation for "Ready" status
         is_host_valid = len(SERVER_HOST.split('.')) == 4 or SERVER_HOST == "localhost"
         is_port_valid = 1024 <= SERVER_PORT <= 65535
         status = "READY" if (is_host_valid and is_port_valid) else "NOT READY"
@@ -345,11 +330,8 @@ if __name__ == '__main__':
             print("\nExiting...")
             sys.exit(0)
 
-    # Determine the UI URL
-    # Using 'localhost' instead of '127.0.0.1' ensures DevTools sees a domain name.
     ui_host = "localhost" if SERVER_HOST in ["0.0.0.0", "127.0.0.1"] else SERVER_HOST
 
-    # Ensure the chosen port is actually available before starting
     _original_port = SERVER_PORT
     SERVER_PORT = ensure_port_available(SERVER_HOST, SERVER_PORT)
     if SERVER_PORT != _original_port:
@@ -359,7 +341,6 @@ if __name__ == '__main__':
     
     try:
         if HAS_WEBVIEW and not OPEN_EXTERNAL_BROWSER:
-            # Run server in a background thread so webview can take the main thread.
             threading.Thread(target=run_server, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
             
             class WebviewAPI:
@@ -394,12 +375,10 @@ if __name__ == '__main__':
                 webbrowser.open(url)
                 while True: time.sleep(1)
         else:
-            # Original browser-based flow
             threading.Thread(target=launch_browser, args=(SERVER_HOST, SERVER_PORT), daemon=True).start()
             run_server(SERVER_HOST, SERVER_PORT)
     except KeyboardInterrupt:
         print("\n[INFO] Monitor stopping...")
     finally:
         shutdown_lhm()
-        # Use hard exit to prevent noisy pythonnet atexit tracebacks
         os._exit(0)

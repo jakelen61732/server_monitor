@@ -52,17 +52,14 @@ def _init_lhm():
     if not HAS_PYTHONNET or platform.system() != "Windows":
         return False
     try:
-        # get_resource_path already handles absolute pathing for both dev and bundled EXE modes
         dll_path = get_resource_path(os.path.join("lib", "LibreHardwareMonitorLib.dll"))
 
         if os.path.exists(dll_path):
-            # Reference HidSharp if it exists (often a required dependency for LHM)
             hid_path = get_resource_path(os.path.join("lib", "HidSharp.dll"))
             if os.path.exists(hid_path):
                 clr.AddReference(hid_path)
 
             clr.AddReference(dll_path)
-            # Use the import style confirmed by successful direct test
             from LibreHardwareMonitor.Hardware import Computer # type: ignore
             
             _lhm_computer = Computer()
@@ -85,7 +82,6 @@ def _refresh_lhm():
     """Recursive hardware refresh without relying on the brittle .NET Visitor interface."""
     global _lhm_computer, _last_lhm_refresh
     now = time.time()
-    # Rate limit: Only poll drivers once per second to save CPU
     if now - _last_lhm_refresh < 0.8:
         return True
 
@@ -139,11 +135,9 @@ def get_storage_info():
     if _init_lhm():
         _refresh_lhm()
         
-        # One-time detection of physical disk sizes on Windows
         if not _disk_size_cache and platform.system() == "Windows":
             try:
                 cmd = 'wmic diskdrive get caption,size /format:list'
-                # WMIC output often contains null bytes or inconsistent line endings
                 raw_output = subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
                 try:
                     output = raw_output.decode('utf-8', errors='ignore')
@@ -159,7 +153,6 @@ def get_storage_info():
                     elif line.startswith('Size=') and caption:
                         size_val = line.split('=', 1)[1].strip()
                         if size_val.isdigit():
-                            # Aggressive normalization for the cache key
                             clean_cap = caption.lower().replace("ata device", "").replace("usb device", "").replace("nvme", "").strip()
                             _disk_size_cache[clean_cap] = int(size_val)
             except: pass
@@ -186,19 +179,15 @@ def get_storage_info():
                             elif "size" in sname or "capacity" in sname or "total" in sname:
                                 lhm_size_gb = val
                     
-                    # 1. Use LHM detected size as primary (Matches LHM GUI values)
                     total_gb = round(lhm_size_gb, 1) if lhm_size_gb is not None else 0
                     
-                    # 2. Secondary fallback to fuzzy matched WMI physical sizes (Common for SATA/HDD)
                     if total_gb <= 0:
                         lhm_name_clean = hardware.Name.lower().replace("ata device", "").replace("usb device", "").replace("nvme", "").strip()
                         for wmi_caption, wmi_size in _disk_size_cache.items():
-                            # Check if either name contains the other to bridge name mismatches
                             if lhm_name_clean and wmi_caption and (lhm_name_clean in wmi_caption or wmi_caption in lhm_name_clean):
                                 total_gb = round(wmi_size / (1024**3), 1)
                                 break
 
-                    # 3. Use direct LHM free space sensor or calculate from percentage fallback
                     if lhm_free_gb is not None:
                         free_gb = round(lhm_free_gb, 1)
                     else:
@@ -219,7 +208,6 @@ def get_storage_stats():
     storage_total = round(sum(d['total_gb'] for d in storage_list), 1)
     storage_free = round(sum(d['free_gb'] for d in storage_list), 1)
     
-    # Fallback to system disk info if physical detection fails or returns 0
     if storage_total == 0:
         _, disk_f_bytes, disk_t_bytes = get_disk_info()
         storage_total = round(disk_t_bytes / (1024**3), 1)
@@ -281,7 +269,6 @@ def check_storage_data_status():
     return missing_info
 
 def get_gpu_name():
-    # 1. Use LHM if available (Most consistent with other hardware)
     if _init_lhm():
         try:
             for hardware in _lhm_computer.Hardware:
@@ -304,7 +291,6 @@ def get_gpu_name():
     return None
 
 def get_gpu_load():
-    # 1. Use LHM if available
     if _init_lhm():
         _refresh_lhm()
         try:
@@ -333,7 +319,6 @@ def get_cpu_percent():
     return 0.0
 
 def get_cpu_freq():
-    # 1. Use LHM if available (Highest accuracy)
     if _init_lhm():
         _refresh_lhm()
         try:
@@ -344,7 +329,6 @@ def get_cpu_freq():
                             return float(sensor.Value) / 1000
         except Exception: pass
 
-    # 2. Fallback to psutil
     if HAS_PSUTIL:
         try:
             freq = psutil.cpu_freq()
@@ -357,7 +341,6 @@ def get_temperature():
     global _last_temp_val, _last_temp_time
     now = time.time()
 
-    # 1. Use LHM if available (Fastest & avoids PowerShell overhead)
     if _init_lhm():
         _refresh_lhm()
         try:
@@ -444,11 +427,9 @@ def get_ram_details():
         except Exception: pass
     elif platform.system() == "Linux":
         try:
-            # Try reading from sysfs for non-root access to some metadata
             if os.path.exists("/sys/class/dmi/id/chassis_type"):
                 with open("/sys/class/dmi/id/chassis_type", "r") as f:
                     c_type = f.read().strip()
-                    # Common chassis types: 8, 9, 10 are usually laptops (SODIMM)
                     form = "SODIMM" if c_type in ["8", "9", "10", "11", "14"] else "DIMM"
         except Exception: pass
     return speed, form
@@ -496,14 +477,11 @@ def get_top_processes():
         total_count += 1
         try:
             raw_name = p.info['name'] or "Unknown"
-            # Strip extension for a cleaner look
             name = raw_name.rsplit('.', 1)[0] if '.' in raw_name else raw_name
             
             mem = p.info['memory_info'].rss if p.info['memory_info'] else 0
-            # Normalize CPU usage by core count so 100% represents total system capacity
             cpu = (p.info['cpu_percent'] or 0.0) / num_cores
             
-            # Disk Speed Calculation
             io = p.info['io_counters']
             disk_speed = 0
             if io:
@@ -533,10 +511,8 @@ def get_top_processes():
         except (psutil.NoSuchProcess, psutil.AccessDenied, Exception):
             continue
     
-    # Sort by memory and take top 10 grouped apps
     top = sorted(groups.values(), key=lambda x: x['memory'], reverse=True)[:10]
     
-    # Final formatting for the frontend
     formatted_list = []
     for g in top:
         formatted_list.append({
@@ -557,7 +533,6 @@ def get_power_stats():
     Fetches power and fan metrics via LibreHardwareMonitor (Windows) 
     or falls back to IPMI (Server).
     """
-    # 1. Try LibreHardwareMonitor (High accuracy for Windows Desktop/Laptops)
     if _init_lhm():
         _refresh_lhm()
         try:
@@ -576,7 +551,6 @@ def get_power_stats():
                     sname = sensor.Name.lower()
                     
                     if s_type == "Power":
-                        # Prioritize Package/Total to avoid double-counting individual cores
                         if "cpu package" in sname:
                             cpu_pwr = val
                         elif "gpu power" in sname or ("gpu" in h_type and "power" in sname):
@@ -586,16 +560,13 @@ def get_power_stats():
                         found_any = True
 
                     elif s_type == "Voltage":
-                        # Prioritize 12V Rail for a realistic "System Current" calculation
                         if "12v" in sname:
                             stats["voltage"] = val
                         elif stats["voltage"] < 10 and ("vcore" in sname or "cpu core" in sname or stats["voltage"] == 0):
-                            # Fallback to VCore if 12V isn't reported by the board
                             stats["voltage"] = val
                         found_any = True
 
                     elif s_type == "Current":
-                        # Only use Current sensors that represent a total output
                         if "total" in sname or "output" in sname:
                             stats["amps"] = val
                             found_any = True
@@ -612,31 +583,25 @@ def get_power_stats():
             for hardware in _lhm_computer.Hardware:
                 update_recursive(hardware)
             
-            # Sum the prioritized components
             stats["watts"] = cpu_pwr + gpu_pwr
 
             if found_any:
-                # If no dedicated Amps sensor was found, calculate based on the best voltage we found
                 if stats["amps"] == 0 and stats["voltage"] > 0:
                     stats["amps"] = stats["watts"] / stats["voltage"]
                 return stats
         except Exception: pass
 
-    # 2. Fallback to IPMI (pyghmi) for server hardware
     if not HAS_PYGHMI:
         return None
     try:
-        from pyghmi.ipmi import command # Local import to prevent EXE crash
-        # Attempts to connect to the local BMC
+        from pyghmi.ipmi import command
         bmc = command.Command()
-        p_data = bmc.get_power() # Returns {'status': 'on', 'current_power': ...}
+        p_data = bmc.get_power()
         
-        # Most BMCs provide 'current_power' in Watts. 
-        # Voltage and Amps often require specific sensor lookups.
         watts = p_data.get('current_power', 0)
         return {
             "watts": watts,
-            "voltage": 230, # Default or sensor-derived
+            "voltage": 230,
             "amps": watts / 230 if watts else 0,
             "fan_rpm": 0,
             "gpu_temp": 0
@@ -645,7 +610,6 @@ def get_power_stats():
         return None
 
 if __name__ == "__main__":
-    # This block allows you to run 'python monitor_core/stats.py' directly
     print("=== Stats.py Direct Debug ===")
     print(f"OS Detected: {CURRENT_OS}")
     print("\n--- Dependency Check ---")
@@ -684,7 +648,6 @@ if __name__ == "__main__":
         d_list, s_total, s_free = get_storage_stats()
         print(f"Total Capacity: {s_free} GB / {s_total} GB")
         for d in d_list:
-            # Matches requested format: Name - {free}/{total}
             cap_str = f"{d['free_gb']} GB / {d['total_gb']} GB" if d['total_gb'] > 0 else "N/A (Physical size not found)"
             print(f" - {d['name']} - {cap_str}")
             

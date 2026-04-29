@@ -11,7 +11,6 @@ CONFIG_FILE = "config.json"
 
 def get_config_path():
     """Returns a writable path for the config file on all platforms."""
-    # ANDROID_PRIVATE_PATH is set by python-for-android
     base_path = os.environ.get('ANDROID_PRIVATE_PATH', os.path.abspath("."))
     return os.path.join(base_path, CONFIG_FILE)
 
