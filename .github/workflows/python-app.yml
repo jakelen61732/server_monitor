@@ -43,17 +43,26 @@ jobs:
     runs-on: ubuntu-latest
     permissions: write-all
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
       - name: Download All Artifacts
         uses: actions/download-artifact@v8 # Confirmed v8
         with:
           path: ./artifacts
 
+      - name: Archive Source Code
+        run: |
+          zip -r Server-Monitor-Source.zip . -x "*.git*"
+          tar -czf Server-Monitor-Source.tar.gz --exclude='.git' .
+
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/*/*"
+          artifacts: "./artifacts/*/*,./Server-Monitor-Source.zip,./Server-Monitor-Source.tar.gz"
           tag: "latest"
           name: "Latest Continuous Build"
+          body: "This release contains the latest build and updated source code."
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
