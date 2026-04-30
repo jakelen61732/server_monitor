@@ -14,4 +14,3 @@ pythonnet>=3.0.3
 # GUI & Distribution
 pywebview>=5.0.0
 pyinstaller>=5.0.0
-pytailwindcss>=0.3.0

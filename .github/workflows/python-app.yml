@@ -12,6 +12,11 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v6
+    - name: Build Tailwind CSS (Windows)
+      run: |
+        mkdir -p tailwindcss
+        Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-windows-x64.exe" -OutFile "tailwindcss/tailwindcss.exe"
+        .\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --minify
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
@@ -48,6 +53,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v6
+    - name: Build Tailwind CSS (Linux)
+      run: |
+        mkdir -p tailwindcss
+        curl -sL "https://github.com" -o "tailwindcss/tailwindcss"
+        chmod +x tailwindcss/tailwindcss
+        ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify
     - name: Set up Python
       uses: actions/setup-python@v6
       with:
