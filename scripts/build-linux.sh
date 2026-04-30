@@ -1,8 +1,39 @@
 #!/bin/bash
+
+# --- Configuration ---
+RAW_VERSION=${1:-"1.0.0"}
+APP_VERSION=${RAW_VERSION#v} # Removes leading 'v' if present
+TAILWIND_VERSION=${2:-"v4.2.4"}
+
+# SemVer check
+if [[ ! $APP_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    echo "[ERROR] Invalid Version format: $APP_VERSION. Use X.Y.Z"
+    exit 1
+fi
+
+# Update project metadata files
+echo "[INFO] Bumping version to $APP_VERSION in setup.py and pyproject.toml..."
+sed -i "s/version=\".*\"/version=\"$APP_VERSION\"/" setup.py
+sed -i "s/version = \".*\"/version = \"$APP_VERSION\"/" pyproject.toml
+
+# Detect Architecture for Tailwind and DEB package
+ARCH=$(dpkg --print-architecture 2>/dev/null || echo "amd64")
+case $ARCH in
+    amd64) TW_ARCH="x64" ;;
+    arm64) TW_ARCH="arm64" ;;
+    armhf) TW_ARCH="armv7" ;;
+    i386)  TW_ARCH="x86" ;;
+    *)     TW_ARCH="x64" ;; # Default to x64
+esac
+# ---------------------
+
 # Build Tailwind
 mkdir -p tailwindcss
-curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-linux-x64" -o "tailwindcss/tailwindcss"
-chmod +x tailwindcss/tailwindcss
+if [ ! -f "tailwindcss/tailwindcss" ]; then
+    echo "[INFO] Downloading Tailwind CLI..."
+    curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-${TW_ARCH}" -o "tailwindcss/tailwindcss"
+    chmod +x tailwindcss/tailwindcss
+fi
 ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify
 
 # Build Binary
@@ -33,8 +64,8 @@ Categories=Utility;
 Terminal=false" > package/usr/share/applications/server-monitor.desktop
 
 echo "Package: server-monitor
-Version: 1.0.0
-Architecture: amd64
+Version: $APP_VERSION
+Architecture: $ARCH
 Maintainer: github-actions
 Description: Server Monitor Website" > package/DEBIAN/control
 

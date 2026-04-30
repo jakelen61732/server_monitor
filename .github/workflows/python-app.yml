@@ -1,24 +1,45 @@
 name: Build and Release
 on:
   push:
-    branches: [ "main" ]
+    tags:
+      - 'v*'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  TAILWIND_VERSION: v4.2.4
 
 
 jobs:
+  check-version:
+    name: Verify Version Consistency
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Verify Version
+        run: |
+          TAG_VERSION=${{ github.ref_name }}
+          TAG_VERSION=${TAG_VERSION#v}
+          SETUP_VERSION=$(grep -m 1 "version=" setup.py | sed 's/.*"\(.*\)".*/\1/')
+          PYPROJECT_VERSION=$(grep -m 1 "version =" pyproject.toml | sed 's/.*"\(.*\)".*/\1/')
+          echo "Tag: $TAG_VERSION, setup.py: $SETUP_VERSION, pyproject.toml: $PYPROJECT_VERSION"
+          if [ "$TAG_VERSION" != "$SETUP_VERSION" ] || [ "$TAG_VERSION" != "$PYPROJECT_VERSION" ]; then
+            echo "::error::Version mismatch! Tag version ($TAG_VERSION) must match setup.py and pyproject.toml versions."
+            exit 1
+          fi
+        shell: bash
+
   build:
     name: Build for ${{ matrix.os }}
+    needs: check-version
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
           - os: windows-latest
-            cmd: powershell ./scripts/build-win.ps1
+            cmd: powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion ${{ env.TAILWIND_VERSION }}
             artifact_path: dist/Server-Monitor.exe
           - os: ubuntu-latest
-            cmd: bash ./scripts/build-linux.sh
+            cmd: bash ./scripts/build-linux.sh ${{ github.ref_name }} ${{ env.TAILWIND_VERSION }}
             artifact_path: Server-Monitor.deb
     steps:
       - uses: actions/checkout@v6
@@ -29,6 +50,11 @@ jobs:
         with:
           version: "v5.1.1"
           install-only: true
+      - name: Cache Tailwind CLI
+        uses: actions/cache@v4
+        with:
+          path: tailwindcss
+          key: ${{ runner.os }}-tailwindcss-${{ env.TAILWIND_VERSION }}
       - name: Install Deps
         run: pip install -r requirements.txt pyinstaller gevent-websocket
       - name: Run Build Script
@@ -51,24 +77,13 @@ jobs:
         with:
           path: ./artifacts
 
-      - name: Archive Source Code
-        run: |
-          mkdir ../temp_archive
-          zip -r ../temp_archive/Server-Monitor-Source.zip . -x "*.git*" -x "artifacts/*" -x "upx/*"
-          tar -czf ../temp_archive/Server-Monitor-Source.tar.gz \
-            --exclude='.git' \
-            --exclude='artifacts' \
-            .
-          mv ../temp_archive/Server-Monitor-Source.zip .
-          mv ../temp_archive/Server-Monitor-Source.tar.gz .
-
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/*/*,./Server-Monitor-Source.zip,./Server-Monitor-Source.tar.gz"
-          tag: "latest"
-          name: "Latest Continuous Build"
-          body: "This release contains the latest build and updated source code."
+          artifacts: "./artifacts/*/*"
+          tag: ${{ github.ref_name }}
+          name: "Release ${{ github.ref_name }}"
+          generateReleaseNotes: true
           allowUpdates: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
