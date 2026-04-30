@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="server-monitor",
-    version="1.0.0",
+    version="1.0.1",
     author="KJAYDev",
     author_email="jakelenjalen@gmail.com",
     description="A professional cross-platform server monitoring dashboard with a desktop GUI.",
