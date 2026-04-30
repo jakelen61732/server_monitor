@@ -34,7 +34,7 @@ echo [INFO] Building Standalone EXE (this may take a few minutes)...
 rem Note: Ensure there are NO trailing spaces after any of the carets (^) below
 python -m PyInstaller --noconfirm --onefile --noconsole --upx-dir=./upx ^
     --name="Server Monitor" ^
-    --icon="favicon-64x64.ico" ^
+    --icon="icons/win-icon.ico" ^
     --uac-admin ^
     --collect-all pyghmi ^
     --add-data "favicon.ico;." ^

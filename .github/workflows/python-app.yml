@@ -1,5 +1,4 @@
 name: Build and Release
-
 on:
   push:
     branches: [ "main" ]
@@ -7,115 +6,54 @@ on:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
-jobs:
-  build-windows:
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v6
-    - name: Build Tailwind CSS (Windows)
-      run: |
-        mkdir -p tailwindcss
-        Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-windows-x64.exe" -OutFile "tailwindcss/tailwindcss.exe"
-        .\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --minify
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller gevent-websocket
-    - name: Build EXE
-      run: |
-        python -m PyInstaller --noconfirm --onefile --noconsole `
-          --name="Server-Monitor" `
-          --icon="favicon-64x64.ico" `
-          --uac-admin `
-          --collect-all pyghmi `
-          --add-data "favicon.ico;." `
-          --add-data "static;static" `
-          --add-data "templates;templates" `
-          --add-data "monitor_core;monitor_core" `
-          --add-data "lib;lib" `
-          --version-file="file_version_info.txt" `
-          --hidden-import=gevent `
-          --hidden-import=engineio.async_drivers.gevent `
-          --hidden-import=geventwebsocket.gws `
-          "server_monitor.py"
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: Windows-Build
-        path: dist/Server-Monitor.exe
 
-  build-linux:
-    runs-on: ubuntu-latest
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            cmd: powershell ./scripts/build-win.ps1
+            artifact_path: dist/Server-Monitor.exe
+          - os: ubuntu-latest
+            cmd: bash ./scripts/build-linux.sh
+            artifact_path: Server-Monitor.deb
     steps:
-    - uses: actions/checkout@v6
-    - name: Build Tailwind CSS (Linux)
-      run: |
-        mkdir -p tailwindcss
-        curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-linux-x64" -o "tailwindcss/tailwindcss"
-        chmod +x tailwindcss/tailwindcss
-        ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.10'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pyinstaller gevent-websocket
-    - name: Build Linux Binary
-      run: |
-        pyinstaller --noconfirm --onefile --name="Server-Monitor" \
-          --collect-all pyghmi \
-          --add-data "favicon.ico:." \
-          --add-data "static:static" \
-          --add-data "templates:templates" \
-          --add-data "monitor_core:monitor_core" \
-          --add-data "lib:lib" \
-          --hidden-import=gevent \
-          --hidden-import=engineio.async_drivers.gevent \
-          --hidden-import=geventwebsocket.gws \
-          "server_monitor.py"
-    - name: Create .deb Package
-      run: |
-        mkdir -p package/usr/local/bin
-        cp dist/Server-Monitor package/usr/local/bin/ 
-        mkdir -p package/DEBIAN
-        echo "Package: server-monitor
-        Version: 1.0.0
-        Architecture: amd64
-        Maintainer: github-actions
-        Description: Server Monitor Website" > package/DEBIAN/control
-        dpkg-deb --build package Server-Monitor.deb
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v7
-      with:
-        name: Linux-Build
-        path: Server-Monitor.deb
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.10'
+      - uses: crazy-max/ghaction-upx@v4
+        with:
+          version: "v5.1.1"
+          install-only: true
+      - name: Install Deps
+        run: pip install -r requirements.txt pyinstaller gevent-websocket
+      - name: Run Build Script
+        run: ${{ matrix.cmd }}
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.os }}-build
+          path: ${{ matrix.artifact_path }}
 
   publish-release:
-    permissions: write-all
-    needs: [build-windows, build-linux]
+    needs: build
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
-      - name: Download Artifacts
-        uses: actions/download-artifact@v8
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v8 # Confirmed v8
         with:
           path: ./artifacts
 
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "./artifacts/Windows-Build/Server-Monitor.exe,./artifacts/Linux-Build/Server-Monitor.deb"
+          artifacts: "./artifacts/*/*"
           tag: "latest"
           name: "Latest Continuous Build"
-          body: "This release contains the latest build of the Server Monitor."
           allowUpdates: true
-          removeArtifacts: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
