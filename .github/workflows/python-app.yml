@@ -36,11 +36,13 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            cmd: powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion $env:TAILWIND_VERSION
-            artifact_path: dist/Server-Monitor.exe
+            cmd: "powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion $env:TAILWIND_VERSION"
+            source_path: dist/Server-Monitor.exe
+            extension: exe
           - os: ubuntu-latest
-            cmd: bash ./scripts/build-linux.sh ${{ github.ref_name }} $TAILWIND_VERSION
-            artifact_path: Server-Monitor.deb
+            cmd: "bash ./scripts/build-linux.sh ${{ github.ref_name }} $TAILWIND_VERSION"
+            source_path: Server-Monitor.deb
+            extension: deb
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-python@v6
@@ -59,10 +61,18 @@ jobs:
         run: pip install -r requirements.txt pyinstaller gevent-websocket
       - name: Run Build Script
         run: ${{ matrix.cmd }}
+      - name: Rename Artifact
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=${TAG#v}
+          ASSET_NAME="Server-Monitor-${VERSION}.${{ matrix.extension }}"
+          mv "${{ matrix.source_path }}" "$ASSET_NAME"
+          echo "ASSET_NAME=$ASSET_NAME" >> $GITHUB_ENV
+        shell: bash
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-build
-          path: ${{ matrix.artifact_path }}
+          path: ${{ env.ASSET_NAME }}
 
   publish-release:
     needs: build
@@ -82,7 +92,7 @@ jobs:
         with:
           artifacts: "./artifacts/*/*"
           tag: ${{ github.ref_name }}
-          name: "Release ${{ github.ref_name }}"
+          name: "Server Monitor ${{ github.ref_name }}"
           generateReleaseNotes: true
           allowUpdates: true
           replacesArtifacts: true
