@@ -53,13 +53,14 @@ jobs:
 
       - name: Archive Source Code
         run: |
-          zip -r Server-Monitor-Source.zip . -x "*.git*" -x "artifacts/*"
-          tar -czf Server-Monitor-Source.tar.gz \
+          mkdir ../temp_archive
+          zip -r ../temp_archive/Server-Monitor-Source.zip . -x "*.git*" -x "artifacts/*" -x "upx/*"
+          tar -czf ../temp_archive/Server-Monitor-Source.tar.gz \
             --exclude='.git' \
             --exclude='artifacts' \
-            --exclude='Server-Monitor-Source.zip' \
-            --exclude='Server-Monitor-Source.tar.gz' \
             .
+          mv ../temp_archive/Server-Monitor-Source.zip .
+          mv ../temp_archive/Server-Monitor-Source.tar.gz .
 
       - name: Create Release
         uses: ncipollo/release-action@v1
