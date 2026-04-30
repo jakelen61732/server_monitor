@@ -4,6 +4,30 @@ cd /d "%~dp0"
 
 echo [DEBUG] Target Directory: %cd%
 
+set APP_VERSION=%1
+if "%APP_VERSION%"=="" set APP_VERSION=1.0.0
+:: Strip leading 'v' if present
+if "%APP_VERSION:~0,1%"=="v" set APP_VERSION=%APP_VERSION:~1%
+
+:: Check Semantic Versioning (X.Y.Z)
+echo %APP_VERSION%| findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
+if errorlevel 1 (
+    echo [ERROR] Invalid Version format: %APP_VERSION%. Use X.Y.Z (e.g. 1.0.1)
+    pause
+    exit /b
+)
+
+:: Update setup.py and pyproject.toml
+echo [INFO] Bumping version to %APP_VERSION% in setup.py and pyproject.toml...
+powershell -Command "(Get-Content setup.py) -replace 'version=\".*\"', 'version=\"%APP_VERSION%\"' | Set-Content setup.py"
+powershell -Command "(Get-Content pyproject.toml) -replace 'version = \".*\"', 'version = \"%APP_VERSION%\"' | Set-Content pyproject.toml"
+
+:: Update file_version_info.txt
+set "TUPLE_VERSION=%APP_VERSION:.=, %, 0"
+powershell -Command "(Get-Content file_version_info.txt) -replace 'filevers=\(.*\)', 'filevers=(%TUPLE_VERSION%)' -replace 'prodvers=\(.*\)', 'prodvers=(%TUPLE_VERSION%)' -replace \"u'FileVersion', u'.*'\", \"u'FileVersion', u'%APP_VERSION%'\" -replace \"u'ProductVersion', u'.*'\", \"u'ProductVersion', u'%APP_VERSION%'\" | Set-Content file_version_info.txt"
+
+set TAILWIND_VERSION=v4.2.4
+
 rem FIX 1: Removed the trailing backslash inside the quotes
 if not exist ".venv" (
     echo [ERROR] Virtual environment (.venv) not found.
@@ -29,6 +53,14 @@ if errorlevel 1 (
     echo [INFO] PyInstaller not found in .venv. Installing now...
     pip install pyinstaller
 )
+
+echo [INFO] Building Tailwind CSS...
+if not exist "tailwindcss" mkdir tailwindcss
+if not exist "tailwindcss\tailwindcss.exe" (
+    echo [INFO] Downloading Tailwind CLI...
+    powershell -Command "Invoke-WebRequest -Uri 'https://github.com/tailwindlabs/tailwindcss/releases/download/%TAILWIND_VERSION%/tailwindcss-windows-x64.exe' -OutFile 'tailwindcss\tailwindcss.exe'"
+)
+.\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --minify
 
 echo [INFO] Building Standalone EXE (this may take a few minutes)...
 rem Note: Ensure there are NO trailing spaces after any of the carets (^) below

@@ -83,6 +83,28 @@ To bundle the application into a single standalone `.exe` file with UPX compress
 ```
 The output will be located in the `dist/` folder.
 
+## 📦 Building the Debian Package (Linux)
+
+To bundle the application into a standalone binary and package it as a `.deb` file for Debian/Ubuntu:
+```bash
+chmod +x build_deb.sh
+./build_deb.sh
+```
+The output will be `Server-Monitor.deb`.
+
+### Installing the .deb Package
+
+Once built, you can install the package using `apt` (recommended as it handles dependencies automatically):
+```bash
+sudo apt install ./Server-Monitor.deb
+```
+
+Alternatively, you can use `dpkg`:
+```bash
+sudo dpkg -i Server-Monitor.deb
+sudo apt-get install -f  # Fix potential missing dependencies
+```
+
 ## 📂 Project Structure
 
 ```text
@@ -94,6 +116,7 @@ server_monitor/
 ├── setup.py            # Package metadata
 ├── requirements.txt    # Project dependencies
 ├── build_exe.bat       # Windows build script
+├── build_deb.sh        # Linux Debian build script
 └── setup.bat/sh        # Installation scripts
 ```
 
