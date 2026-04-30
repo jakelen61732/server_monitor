@@ -36,10 +36,10 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            cmd: powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion ${{ env.TAILWIND_VERSION }}
+            cmd: powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion $env:TAILWIND_VERSION
             artifact_path: dist/Server-Monitor.exe
           - os: ubuntu-latest
-            cmd: bash ./scripts/build-linux.sh ${{ github.ref_name }} ${{ env.TAILWIND_VERSION }}
+            cmd: bash ./scripts/build-linux.sh ${{ github.ref_name }} $TAILWIND_VERSION
             artifact_path: Server-Monitor.deb
     steps:
       - uses: actions/checkout@v6
@@ -73,7 +73,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Download All Artifacts
-        uses: actions/download-artifact@v8 # Confirmed v8
+        uses: actions/download-artifact@v8
         with:
           path: ./artifacts
 
