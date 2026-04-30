@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Server Monitor</title>
     <link rel="stylesheet" href="/static/style.css">
-    <link href="/static/output.css" rel="stylesheet">
+    <link href="/static/dist/output.css" rel="stylesheet">
 </head>
 
 <body id="main-body" data-gpu-supported="{{ 'true' if gpu_load_supported else 'false' }}"
@@ -398,9 +398,9 @@
             </div>
         </div>
 
-        <script src="/static/chart.min.js"></script>
-        <script src="/static/socket.io.min.js"></script>
-        <script src="/static/dashboard.js"></script>
+        <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/chart.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 
 </html>

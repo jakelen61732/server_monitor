@@ -26,6 +26,7 @@ setup(
         "pywebview>=5.0.0",
         "pyghmi>=1.6.15",
         "pythonnet>=3.0.3",
+        "pytailwindcss>=0.3.0",
     ],
     python_requires=">=3.7",
     classifiers=[

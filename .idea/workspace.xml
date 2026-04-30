@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="f7b03fed-5690-4827-ab81-70c205114719" name="Changes" comment="Refine UI/UX with entrance animations and environment-aware window controls&#10;&#10;- Implement `entranceBounce` animation for the dashboard card on load.&#10;- Redesign global scrollbars and add dynamic header styling on scroll.&#10;- Add environment-aware logic to hide window controls when not running in a GUI wrapper.&#10;- Refactor window management functions (minimize, maximize, close) in `dashboard.js`.&#10;- Improve layout stability by using a fixed header and independent scrolling content area.&#10;- Perform extensive cleanup of redundant comments and internal documentation across core modules.&#10;&#10;Changes to be committed:&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   monitor_core/utils.py&#10;&#9;modified:   server_monitor.py&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   static/style.css&#10;&#9;modified:   templates/dashboard.html">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots/dashboard.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots/dashboard.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/screenshots/system_details.png" beforeDir="false" afterPath="$PROJECT_DIR$/screenshots/system_details.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/chart.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/dashboard.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/input.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/output.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/socket.io.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/tailwind.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/dashboard.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/dashboard.html" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="UPDATE_TYPE" value="REBASE" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;jakelen61732&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/jakelen61732/server_monitor.git&quot;,
+    &quot;accountId&quot;: &quot;be6fd3e5-5ca3-45ae-a402-991c45a7c1a4&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="3D1OoBeLmJlYEQj5z6DAxkT2Noz" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.readMode.enableVisualFormatting": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "com.google.services.firebase.aqiPopupShown": "true",
+    "kotlin-language-version-configured": "true",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
+    "settings.editor.selected.configurable": "settings.sync"
+  }
+}]]></component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="f7b03fed-5690-4827-ab81-70c205114719" name="Changes" comment="" />
+      <created>1777446283976</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1777446283976</updated>
+    </task>
+    <task id="LOCAL-00001" summary="build-windows | build-linux&#10;&#10;--collect-all pyghmi&#10;--uac-admin">
+      <option name="closed" value="true" />
+      <created>1777449176218</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1777449176219</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Remove network column from process table and enable external access&#10;&#10;Changes to be committed:&#10;&#9;modified:   config.json&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   screenshots/dashboard.png&#10;&#9;modified:   screenshots/system_details.png&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   templates/dashboard.html">
+      <option name="closed" value="true" />
+      <created>1777452575014</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1777452575014</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Refine UI/UX with entrance animations and environment-aware window controls&#10;&#10;- Implement `entranceBounce` animation for the dashboard card on load.&#10;- Redesign global scrollbars and add dynamic header styling on scroll.&#10;- Add environment-aware logic to hide window controls when not running in a GUI wrapper.&#10;- Refactor window management functions (minimize, maximize, close) in `dashboard.js`.&#10;- Improve layout stability by using a fixed header and independent scrolling content area.&#10;- Perform extensive cleanup of redundant comments and internal documentation across core modules.&#10;&#10;Changes to be committed:&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   monitor_core/utils.py&#10;&#9;modified:   server_monitor.py&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   static/style.css&#10;&#9;modified:   templates/dashboard.html">
+      <option name="closed" value="true" />
+      <created>1777473376510</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1777473376510</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="build-windows | build-linux&#10;&#10;--collect-all pyghmi&#10;--uac-admin" />
+    <MESSAGE value="Remove network column from process table and enable external access&#10;&#10;Changes to be committed:&#10;&#9;modified:   config.json&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   screenshots/dashboard.png&#10;&#9;modified:   screenshots/system_details.png&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   templates/dashboard.html" />
+    <MESSAGE value="Refine UI/UX with entrance animations and environment-aware window controls&#10;&#10;- Implement `entranceBounce` animation for the dashboard card on load.&#10;- Redesign global scrollbars and add dynamic header styling on scroll.&#10;- Add environment-aware logic to hide window controls when not running in a GUI wrapper.&#10;- Refactor window management functions (minimize, maximize, close) in `dashboard.js`.&#10;- Improve layout stability by using a fixed header and independent scrolling content area.&#10;- Perform extensive cleanup of redundant comments and internal documentation across core modules.&#10;&#10;Changes to be committed:&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   monitor_core/utils.py&#10;&#9;modified:   server_monitor.py&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   static/style.css&#10;&#9;modified:   templates/dashboard.html" />
+    <option name="LAST_COMMIT_MESSAGE" value="Refine UI/UX with entrance animations and environment-aware window controls&#10;&#10;- Implement `entranceBounce` animation for the dashboard card on load.&#10;- Redesign global scrollbars and add dynamic header styling on scroll.&#10;- Add environment-aware logic to hide window controls when not running in a GUI wrapper.&#10;- Refactor window management functions (minimize, maximize, close) in `dashboard.js`.&#10;- Improve layout stability by using a fixed header and independent scrolling content area.&#10;- Perform extensive cleanup of redundant comments and internal documentation across core modules.&#10;&#10;Changes to be committed:&#10;&#9;modified:   monitor_core/stats.py&#10;&#9;modified:   monitor_core/utils.py&#10;&#9;modified:   server_monitor.py&#10;&#9;modified:   static/dashboard.js&#10;&#9;modified:   static/style.css&#10;&#9;modified:   templates/dashboard.html" />
+  </component>
+</project>
