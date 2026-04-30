@@ -12,7 +12,7 @@ if "%APP_VERSION:~0,1%"=="v" set APP_VERSION=%APP_VERSION:~1%
 :: Check Semantic Versioning (X.Y.Z)
 echo %APP_VERSION%| findstr /R "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
 if errorlevel 1 (
-    echo [ERROR] Invalid Version format: %APP_VERSION%. Use X.Y.Z (e.g. 1.0.1)
+    echo [ERROR] Invalid Version format: %APP_VERSION%. Use X.Y.Z (e.g. 1.0.2)
     pause
     exit /b
 )
