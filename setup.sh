@@ -40,4 +40,34 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
+# Download Build Tools (Tailwind and UPX)
+TAILWIND_VERSION="v4.2.4"
+UPX_VERSION="5.1.1"
+ARCH=$(dpkg --print-architecture 2>/dev/null || echo "amd64")
+case $ARCH in
+    amd64) TW_ARCH="x64"; UPX_ARCH="amd64" ;;
+    arm64) TW_ARCH="arm64"; UPX_ARCH="arm64" ;;
+    *)     TW_ARCH="x64"; UPX_ARCH="amd64" ;;
+esac
+
+echo "Detected Architecture: $ARCH (Tailwind: $TW_ARCH, UPX: $UPX_ARCH)"
+mkdir -p tailwindcss tools
+
+if [ ! -f "tailwindcss/tailwindcss" ]; then
+    echo "[INFO] Downloading Tailwind CLI..."
+    curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-${TW_ARCH}" -o "tailwindcss/tailwindcss"
+    chmod +x tailwindcss/tailwindcss
+else
+    echo "[INFO] Tailwind CLI already exists. Skipping download."
+fi
+
+if [ ! -f "tools/upx" ]; then
+    echo "[INFO] Downloading UPX..."
+    curl -sL "https://github.com/upx/upx/releases/download/v${UPX_VERSION}/upx-${UPX_VERSION}-${UPX_ARCH}_linux.tar.xz" -o "tools/upx.tar.xz"
+    tar -xJf "tools/upx.tar.xz" -C "tools" --strip-components=1 "upx-${UPX_VERSION}-${UPX_ARCH}_linux/upx"
+    rm "tools/upx.tar.xz"
+else
+    echo "[INFO] UPX already exists. Skipping download."
+fi
+
 echo "Setup complete. Run 'source .venv/bin/activate && python3 server_monitor.py' to start."

@@ -154,37 +154,29 @@ To set up a local environment for testing or adding new features:
 
 ### 🎨 Compiling Tailwind CSS
 
+*Note: Build tools (Tailwind CLI and UPX) are automatically downloaded when you run the initial `setup.bat` or `setup.sh` script.*
+
 If you make changes to the styles, you must recompile the CSS using the standalone CLI:
 
 #### Linux
 **Production Build (Minified):**
 ```bash
-mkdir -p tailwindcss
-curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-linux-x64" -o "tailwindcss/tailwindcss"
-chmod +x tailwindcss/tailwindcss
 ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify
 ```
 
 **Development (Watch Mode):**
 ```bash
-mkdir -p tailwindcss
-curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-linux-x64" -o "tailwindcss/tailwindcss"
-chmod +x tailwindcss/tailwindcss
 ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --watch
 ```
 
 #### Windows (PowerShell)
 **Production Build (Minified):**
 ```powershell
-mkdir -p tailwindcss
-Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-windows-x64.exe" -OutFile "tailwindcss/tailwindcss.exe"
 .\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --minify
 ```
 
 **Development (Watch Mode):**
 ```powershell
-mkdir -p tailwindcss
-Invoke-WebRequest -Uri "https://github.com/tailwindlabs/tailwindcss/releases/download/v4.2.4/tailwindcss-windows-x64.exe" -OutFile "tailwindcss/tailwindcss.exe"
 .\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --watch
 ```
 

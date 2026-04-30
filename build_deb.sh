@@ -3,7 +3,6 @@
 # --- Configuration ---
 RAW_VERSION=${1:-"1.0.0"}
 APP_VERSION=${RAW_VERSION#v} # Removes leading 'v' if present
-TAILWIND_VERSION="v4.2.4"
 
 # SemVer check
 if [[ ! $APP_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -47,13 +46,14 @@ if [ $? -ne 0 ]; then
     pip install pyinstaller
 fi
 
-echo "[INFO] Building Tailwind CSS..."
-mkdir -p tailwindcss
+echo [INFO] Checking build tools...
 if [ ! -f "tailwindcss/tailwindcss" ]; then
-    echo "[INFO] Downloading Tailwind CLI..."
-    curl -sL "https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-${TW_ARCH}" -o "tailwindcss/tailwindcss"
-    chmod +x tailwindcss/tailwindcss
+    echo "[ERROR] Tailwind CLI not found."
+    echo "Please run ./setup.sh first to download the required build tools."
+    exit 1
 fi
+
+echo [INFO] Compiling Tailwind CSS...
 ./tailwindcss/tailwindcss -i ./static/src/input.css -o ./static/dist/output.css --minify
 
 echo "[INFO] Building Standalone Binary..."

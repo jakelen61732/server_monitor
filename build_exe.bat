@@ -26,7 +26,19 @@ powershell -Command "(Get-Content pyproject.toml) -replace 'version = \".*\"', '
 set "TUPLE_VERSION=%APP_VERSION:.=, %, 0"
 powershell -Command "(Get-Content file_version_info.txt) -replace 'filevers=\(.*\)', 'filevers=(%TUPLE_VERSION%)' -replace 'prodvers=\(.*\)', 'prodvers=(%TUPLE_VERSION%)' -replace \"u'FileVersion', u'.*'\", \"u'FileVersion', u'%APP_VERSION%'\" -replace \"u'ProductVersion', u'.*'\", \"u'ProductVersion', u'%APP_VERSION%'\" | Set-Content file_version_info.txt"
 
-set TAILWIND_VERSION=v4.2.4
+
+if not exist "tailwindcss\tailwindcss.exe" (
+    echo [ERROR] Tailwind CLI not found.
+    echo Please run 'setup.bat' first to download the required build tools.
+    pause
+    exit /b
+)
+if not exist "tools\upx.exe" (
+    echo [ERROR] UPX not found in 'tools' directory.
+    echo Please run 'setup.bat' first to download the required build tools.
+    pause
+    exit /b
+)
 
 rem FIX 1: Removed the trailing backslash inside the quotes
 if not exist ".venv" (
@@ -36,9 +48,9 @@ if not exist ".venv" (
     exit /b
 )
 
-if not exist "favicon-64x64.ico" (
-    echo [ERROR] favicon-64x64.ico not found in the current directory.
-    echo Please place an icon file named 'favicon-64x64.ico' in this folder before building.
+if not exist "icons/win-icon.ico" (
+    echo [ERROR] icons/win-icon.ico not found in the current directory.
+    echo Please place an icon file named 'icons/win-icon.ico' in this folder before building.
     pause
     exit /b
 )
@@ -54,12 +66,7 @@ if errorlevel 1 (
     pip install pyinstaller
 )
 
-echo [INFO] Building Tailwind CSS...
-if not exist "tailwindcss" mkdir tailwindcss
-if not exist "tailwindcss\tailwindcss.exe" (
-    echo [INFO] Downloading Tailwind CLI...
-    powershell -Command "Invoke-WebRequest -Uri 'https://github.com/tailwindlabs/tailwindcss/releases/download/%TAILWIND_VERSION%/tailwindcss-windows-x64.exe' -OutFile 'tailwindcss\tailwindcss.exe'"
-)
+echo [INFO] Compiling Tailwind CSS...
 .\tailwindcss\tailwindcss.exe -i ./static/src/input.css -o ./static/dist/output.css --minify
 
 echo [INFO] Building Standalone EXE (this may take a few minutes)...
