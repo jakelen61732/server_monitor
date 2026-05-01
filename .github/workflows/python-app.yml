@@ -36,10 +36,17 @@ jobs:
       matrix:
         include:
           - os: windows-latest
+            arch: x64
             cmd: "powershell ./scripts/build-win.ps1 -Version ${{ github.ref_name }} -TailwindVersion $env:TAILWIND_VERSION"
             source_path: dist/Server-Monitor.exe
             extension: exe
           - os: ubuntu-latest
+            arch: AMD
+            cmd: "bash ./scripts/build-linux.sh ${{ github.ref_name }} $TAILWIND_VERSION"
+            source_path: Server-Monitor.deb
+            extension: deb
+          - os: ubuntu-24.04-arm
+            arch: ARM
             cmd: "bash ./scripts/build-linux.sh ${{ github.ref_name }} $TAILWIND_VERSION"
             source_path: Server-Monitor.deb
             extension: deb
@@ -65,7 +72,7 @@ jobs:
         run: |
           TAG=${{ github.ref_name }}
           VERSION=${TAG#v}
-          ASSET_NAME="Server-Monitor-${VERSION}.${{ matrix.extension }}"
+          ASSET_NAME="Server-Monitor-${VERSION}-${{ matrix.arch }}.${{ matrix.extension }}"
           mv "${{ matrix.source_path }}" "$ASSET_NAME"
           echo "ASSET_NAME=$ASSET_NAME" >> $GITHUB_ENV
         shell: bash

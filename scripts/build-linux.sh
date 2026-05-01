@@ -38,7 +38,6 @@ fi
 
 # Build Binary
 pyinstaller --noconfirm --onefile --name="Server-Monitor" \
-  --upx-dir="$UPX_PATH" \
   --collect-all pyghmi \
   --add-data "favicon.ico:." \
   --add-data "static:static" \

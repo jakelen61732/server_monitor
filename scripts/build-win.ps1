@@ -33,7 +33,6 @@ if (!(Test-Path "tailwindcss/tailwindcss.exe")) {
 
 # Build EXE
 python -m PyInstaller --noconfirm --onefile --noconsole `
-  --upx-dir="$env:UPX_PATH" `
   --name="Server-Monitor" `
   --icon="./icons/win-icon.ico" `
   --uac-admin `
